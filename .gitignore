@@ -1,0 +1,10 @@
+# Eclipse files
+.classpath
+.project
+.settings/
+
+# Maven target directory
+target/
+
+# Ignore files with .slx extension
+*.slx
