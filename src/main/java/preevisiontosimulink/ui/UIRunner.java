@@ -1,6 +1,7 @@
 package preevisiontosimulink.ui;
 
-import preevisiontosimulink.generator.SimulinkModelGenerator;
+
+import preevisiontosimulink.generator.SimulinkGenerator;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -16,6 +17,8 @@ public class UIRunner {
         frame.add(panel);
         placeComponents(panel);
 
+        // Set the location of the main frame to the center of the screen
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 
@@ -38,8 +41,7 @@ public class UIRunner {
             @Override
             public void actionPerformed(ActionEvent e) {
                 statusLabel.setText("Generating Simulink model...");
-                SimulinkModelGenerator generator = new SimulinkModelGenerator();
-                generator.generateModel();
+                SimulinkGenerator.generateModel();
                 statusLabel.setText("Simulink model generated.");
             }
         });
