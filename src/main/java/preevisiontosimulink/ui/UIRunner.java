@@ -1,17 +1,19 @@
 package preevisiontosimulink.ui;
 
+import preevisiontosimulink.generator.ModelGenerator;
 
-import preevisiontosimulink.generator.SimulinkGenerator;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class UIRunner {
+    private static JTextField modelNameField;
+
     public static void main(String[] args) {
         JFrame frame = new JFrame("Simulink Model Generator");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(300, 200);
+        frame.setSize(400, 200);
 
         JPanel panel = new JPanel();
         frame.add(panel);
@@ -26,22 +28,31 @@ public class UIRunner {
         panel.setLayout(null);
 
         JLabel titleLabel = new JLabel("Simulink Model Generator");
-        titleLabel.setBounds(70, 20, 160, 25);
+        titleLabel.setBounds(120, 20, 160, 25);
         panel.add(titleLabel);
 
-        JButton runButton = new JButton("Run");
-        runButton.setBounds(100, 70, 100, 25);
+        JLabel modelNameLabel = new JLabel("Model Name:");
+        modelNameLabel.setBounds(50, 60, 80, 25);
+        panel.add(modelNameLabel);
+
+        modelNameField = new JTextField(20);
+        modelNameField.setBounds(140, 60, 200, 25);
+        panel.add(modelNameField);
+
+        JButton runButton = new JButton("Generate");
+        runButton.setBounds(150, 100, 100, 25);
         panel.add(runButton);
 
         JLabel statusLabel = new JLabel("");
-        statusLabel.setBounds(70, 110, 160, 25);
+        statusLabel.setBounds(120, 140, 160, 25);
         panel.add(statusLabel);
 
         runButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                String modelName = modelNameField.getText();
                 statusLabel.setText("Generating Simulink model...");
-                SimulinkGenerator.generateModel();
+                ModelGenerator.generateModel(modelName);
                 statusLabel.setText("Simulink model generated.");
             }
         });

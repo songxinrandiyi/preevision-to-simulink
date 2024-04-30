@@ -23,12 +23,16 @@ public class SimulinkSystem implements ISimulinkSystem {
     public void addRelation(SimulinkRelation relation) {
         relationList.add(relation);
     }
-
-
-    @Override
-    public <T> void addParameter(SimulinkParameter<T> parameter) {
-        // Implementation for adding a parameter
-    }
+    
+	@Override
+	public ISimulinkBlock getBlock(String name) {
+		for (ISimulinkBlock block : blockList) {
+			if (block.getName().equals(name)) {
+				return block;
+			}
+		}
+		return null;	
+	}
 
     @Override
     public void generateModel() {
@@ -41,14 +45,11 @@ public class SimulinkSystem implements ISimulinkSystem {
             for (ISimulinkBlock block : blockList) {
                 block.generateModel(matlab);
             }
-            /*
-            matlab.eval("add_block('simulink/Sources/Sine Wave', '" + modelName + "/Sine')");
-            matlab.eval("add_block('simulink/Math Operations/Gain', '" + modelName + "/Gain')");
-            matlab.eval("add_block('simulink/Commonly Used Blocks/Scope', '" + modelName + "/Scope')");
-            matlab.eval("add_line('" + modelName + "', 'Sine/1', 'Gain/1')");
-            matlab.eval("add_line('" + modelName + "', 'Gain/1', 'Scope/1')");
-            matlab.eval("set_param('" + modelName + "/Gain', 'Gain', '2')");
-            */
+            
+            // Generate the Simulink model for each relation in the relationList
+            for (SimulinkRelation relation : relationList) {
+                relation.generateModel(matlab);
+            }
             
             // Save the model
             String modelFilePath = "" + modelName + ".slx";

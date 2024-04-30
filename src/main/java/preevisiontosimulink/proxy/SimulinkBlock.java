@@ -6,8 +6,7 @@ import java.util.List;
 import com.mathworks.engine.*;
 
 public class SimulinkBlock implements ISimulinkBlock {
-    private static final String BLOCK_NAME = "";
-    private static final String BLOCK_PATH = "";
+    protected String name;
     protected List<SimulinkPort> inputs = new ArrayList<>();
     protected List<SimulinkPort> outputs = new ArrayList<>();
     protected List<SimulinkParameter<?>> parameters = new ArrayList<>();
@@ -27,21 +26,15 @@ public class SimulinkBlock implements ISimulinkBlock {
     public List<SimulinkPort> getOutputs() {
         return outputs;
     }
-    
-    @Override
-    public String getPath() {
-        return BLOCK_PATH;
-    }
-
-    @Override
-    public String getName() {
-        return BLOCK_NAME;
-    }
-
+       
+	@Override
+	public String getName() {
+		return name;
+	}
 
     @Override
     public void generateModel(MatlabEngine matlab) {
-        // Implementation for generating the Simulink block model
+
     }
 
     @Override

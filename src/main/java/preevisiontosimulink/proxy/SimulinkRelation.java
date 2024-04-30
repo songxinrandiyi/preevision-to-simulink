@@ -33,8 +33,17 @@ public class SimulinkRelation {
         this.outPort = outPort;
     }
     
-    public void generateModel(MatlabEngine engine) {
-    	
+    public void generateModel(MatlabEngine matlab) {
+		// Implementation for generating the Simulink relation 
+    	String sourceBlock = inPort.getParent().getName() + "/" + inPort.getIndex();
+    	String destinationBlock = outPort.getParent().getName() + "/" + outPort.getIndex();
+    	try {
+        	matlab.eval("add_line('" + parent.getModelName() + "', '" + sourceBlock + "', '" + destinationBlock + "')");
+
+    		System.out.println("Simulink relation generated: " + sourceBlock + " -> " + destinationBlock);
+    	} catch (Exception e) {
+			e.printStackTrace();
+		}
     }
 
 }

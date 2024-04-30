@@ -5,32 +5,30 @@ import com.mathworks.engine.*;
 import preevisiontosimulink.proxy.*;
 
 
-public class SineWaveBlock extends SimulinkBlock {
-	private static final String BLOCK_NAME = "SineWave";
-	private static final String BLOCK_PATH = "simulink/Sources/Sine Wave";
+public class GainBlock extends SimulinkBlock {
+	private static final String BLOCK_NAME = "Gain";
+	private static final String BLOCK_PATH = "simulink/Math Operations/Gain";
     private static int num = 0;
 
-    public SineWaveBlock(ISimulinkSystem parent) {
+    public GainBlock(ISimulinkSystem parent) {
         super(parent);
-    }
-    
+    }    
+
     @Override
-    public void initialize() {		
+    public void initialize() {
     	//Represents the number of instance created
-    	num = num + 1;   	
+    	num = num + 1;	   	
 		name = BLOCK_NAME + num;
 		
         // Initialize inputs and outputs if necessary
         this.inputs = new ArrayList<>(); 
         this.outputs = new ArrayList<>();
-        this.outputs.add(new SimulinkPort(1, this));
+		this.inputs.add(new SimulinkPort(1, this));
+        this.outputs.add(new SimulinkPort(1, this)); 
 
-        // Initialize parameters specific to the block
+        // Initialize parameters specific to the Sine Wave block
         this.parameters = new ArrayList<>();
-        this.parameters.add(new SimulinkParameter<Double>("Amplitude", this));
-        this.parameters.add(new SimulinkParameter<Double>("Frequency", this));
-		this.parameters.add(new SimulinkParameter<Double>("Bias", this));
-        this.parameters.add(new SimulinkParameter<Double>("Phase", this));
+        this.parameters.add(new SimulinkParameter<Double>("Gain", this));
     }
     
     @Override

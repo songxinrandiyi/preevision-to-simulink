@@ -4,8 +4,8 @@ import java.util.List;
 
 public interface ISimulinkSystem {
     void addBlock(ISimulinkBlock block);
+    ISimulinkBlock getBlock(String name);
     void addRelation(SimulinkRelation relation);
-    <T> void addParameter(SimulinkParameter<T> parameter);
     void generateModel();
     List<ISimulinkBlock> getBlockList();
     List<SimulinkRelation> getRelationList();

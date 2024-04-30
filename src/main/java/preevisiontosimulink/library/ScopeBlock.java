@@ -5,12 +5,12 @@ import com.mathworks.engine.*;
 import preevisiontosimulink.proxy.*;
 
 
-public class SineWaveBlock extends SimulinkBlock {
-	private static final String BLOCK_NAME = "SineWave";
-	private static final String BLOCK_PATH = "simulink/Sources/Sine Wave";
+public class ScopeBlock extends SimulinkBlock {
+	private static final String BLOCK_NAME = "Scope";
+	private static final String BLOCK_PATH = "simulink/Commonly Used Blocks/Scope";
     private static int num = 0;
 
-    public SineWaveBlock(ISimulinkSystem parent) {
+    public ScopeBlock(ISimulinkSystem parent) {
         super(parent);
     }
     
@@ -23,14 +23,11 @@ public class SineWaveBlock extends SimulinkBlock {
         // Initialize inputs and outputs if necessary
         this.inputs = new ArrayList<>(); 
         this.outputs = new ArrayList<>();
-        this.outputs.add(new SimulinkPort(1, this));
+        this.inputs.add(new SimulinkPort(1, this));
 
         // Initialize parameters specific to the block
         this.parameters = new ArrayList<>();
-        this.parameters.add(new SimulinkParameter<Double>("Amplitude", this));
-        this.parameters.add(new SimulinkParameter<Double>("Frequency", this));
-		this.parameters.add(new SimulinkParameter<Double>("Bias", this));
-        this.parameters.add(new SimulinkParameter<Double>("Phase", this));
+        this.parameters.add(new SimulinkParameter<Integer>("NumInputPorts", this));
     }
     
     @Override

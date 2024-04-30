@@ -7,7 +7,9 @@ import com.mathworks.engine.*;
 
 public interface ISimulinkBlock extends ISimulinkParameterizable {
     String getName();
-    String getPath();
+	List<SimulinkParameter<?>> getParameters();
+	<T> void addParameter(SimulinkParameter<T> parameter);
+	<T> void setParameter(String name, T value);
     List<SimulinkPort> getInputs();
     List<SimulinkPort> getOutputs();
     void generateModel(MatlabEngine matlab);
