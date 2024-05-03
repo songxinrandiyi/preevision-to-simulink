@@ -8,3 +8,14 @@ target/
 
 # Ignore files with .slx extension
 *.slx
+
+*.kbl
+
+*.xlsx
+
+.arxml
+
+.vec
+
+
+
