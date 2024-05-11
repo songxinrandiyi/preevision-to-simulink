@@ -7,13 +7,17 @@ import com.mathworks.engine.*;
 
 public class SimulinkBlock implements ISimulinkBlock {
     protected String name;
-    protected List<SimulinkPort> inputs = new ArrayList<>();
-    protected List<SimulinkPort> outputs = new ArrayList<>();
-    protected List<SimulinkParameter<?>> parameters = new ArrayList<>();
+    protected List<SimulinkPort> inputs;
+    protected List<SimulinkPort> outputs;
+    protected List<SimulinkParameter<?>> parameters;
     protected ISimulinkSystem parent;
     
-    public SimulinkBlock(ISimulinkSystem parent) {
+    public SimulinkBlock(ISimulinkSystem parent, String name) {
+		this.name = name;
         this.parent = parent;
+        this.inputs = new ArrayList<>(); 
+        this.outputs = new ArrayList<>();
+		this.parameters = new ArrayList<>();
         this.initialize();
     }
     
@@ -69,5 +73,10 @@ public class SimulinkBlock implements ISimulinkBlock {
 	@Override
 	public void initialize() {
 		
+	}
+
+	@Override
+	public ISimulinkSystem getParent() {
+		return parent;
 	}
 }

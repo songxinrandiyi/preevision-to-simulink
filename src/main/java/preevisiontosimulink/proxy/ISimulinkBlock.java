@@ -12,6 +12,7 @@ public interface ISimulinkBlock extends ISimulinkParameterizable {
 	<T> void setParameter(String name, T value);
     List<SimulinkPort> getInputs();
     List<SimulinkPort> getOutputs();
+    ISimulinkSystem getParent();
     void generateModel(MatlabEngine matlab);
     void initialize();
 }

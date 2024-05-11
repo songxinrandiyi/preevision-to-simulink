@@ -35,12 +35,19 @@ public class SimulinkRelation {
     
     public void generateModel(MatlabEngine matlab) {
 		// Implementation for generating the Simulink relation 
-    	String sourceBlock = inPort.getParent().getName() + "/" + inPort.getIndex();
-    	String destinationBlock = outPort.getParent().getName() + "/" + outPort.getIndex();
+    	String sourceBlockPath = inPort.getParent().getParent().getModelName() + "/" + inPort.getParent().getName();
+    	String destinationBlockPath = outPort.getParent().getParent().getModelName() + "/" + outPort.getParent().getName();
+    	String sourcePosition = "position_" + inPort.getParent().getName();
+    	String destinationPosition = "position_" + outPort.getParent().getName();
+    	String sourcePort = inPort.getIndex() + "";
+		String destinationPort = outPort.getIndex() + "";
+    	
     	try {
-        	matlab.eval("add_line('" + parent.getModelName() + "', '" + sourceBlock + "', '" + destinationBlock + "')");
+    		matlab.eval(sourcePosition + " = get_param('" + sourceBlockPath + "', 'PortConnectivity')");
+			matlab.eval(destinationPosition + " = get_param('" + destinationBlockPath + "', 'PortConnectivity')");
+            matlab.eval("add_line('" + parent.getModelName() + "', [" + sourcePosition + "(" + sourcePort + ").Position ; " + destinationPosition + "(" + destinationPort + ").Position])");
 
-    		System.out.println("Simulink relation generated: " + sourceBlock + " -> " + destinationBlock);
+    		System.out.println("Simulink relation generated: " + sourceBlockPath + " -> " + destinationBlockPath);
     	} catch (Exception e) {
 			e.printStackTrace();
 		}

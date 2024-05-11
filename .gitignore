@@ -6,6 +6,8 @@
 # Maven target directory
 target/
 
+lib/
+
 # Ignore files with .slx extension
 *.slx
 

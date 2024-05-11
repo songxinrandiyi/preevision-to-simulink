@@ -16,14 +16,16 @@ public class ModelGenerator {
         matlab.eval("add_line('" + modelName + "', 'Gain/1', 'Scope/1')");
         matlab.eval("set_param('" + modelName + "/Gain', 'Gain', '2')");
         */
-        system.addBlock(new SineWaveBlock(system)); 
-        getLastBlock(system.getBlockList()).setParameter("Amplitude", 5); 
-        getLastBlock(system.getBlockList()).setParameter("Bias", 2);
-        system.addBlock(new GainBlock(system));
-        system.getBlock("Gain" + 1).setParameter("Gain", 3);  
-        system.addRelation(new SimulinkRelation(system.getBlock("SineWave1").getOutputs().get(0), system.getBlock("Gain1").getInputs().get(0), system));
-        system.addBlock(new ScopeBlock(system));
-		system.addRelation(new SimulinkRelation(system.getBlock("Gain1").getOutputs().get(0), system.getBlock("Scope1").getInputs().get(0), system));
+		
+		system.addBlock(new DCVoltageSource(system, null));
+		getLastBlock(system.getBlockList()).setParameter("v0", 10);
+		system.addBlock(new Resistor(system, null));
+		getLastBlock(system.getBlockList()).setParameter("R", 50);
+		system.addRelation(new SimulinkRelation(getSecondLastBlock(system.getBlockList()).getOutputs().get(0), getLastBlock(system.getBlockList()).getInputs().get(0), system));
+		
+		system.addBlock(new ElectricalReference(system, null));
+		system.addRelation(new SimulinkRelation(getSecondLastBlock(system.getBlockList()).getOutputs().get(0), getLastBlock(system.getBlockList()).getInputs().get(0), system));			
+				
         system.generateModel();
     }
     
@@ -40,4 +42,11 @@ public class ModelGenerator {
         }
         return blockList.get(blockList.size() - 2);
     }
+    
+	public static ISimulinkBlock getThirdLastBlock(List<ISimulinkBlock> blockList) {
+		if (blockList.isEmpty()) {
+			return null; // Liste ist leer, gib null zurück
+		}
+		return blockList.get(blockList.size() - 3);
+	}
 }

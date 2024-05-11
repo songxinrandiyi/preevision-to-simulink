@@ -5,25 +5,24 @@ import com.mathworks.engine.*;
 import preevisiontosimulink.proxy.*;
 
 
-public class ScopeBlock extends SimulinkBlock {
-	private static final String BLOCK_NAME = "Scope";
-	private static final String BLOCK_PATH = "simulink/Commonly Used Blocks/Scope";
+public class ElectricalReference extends SimulinkBlock {
+	private static final String BLOCK_NAME = "ElectricalReference";
+	private static final String BLOCK_PATH = "fl_lib/Electrical/Electrical Elements/Electrical Reference";
     private static int num = 0;
 
-    public ScopeBlock(ISimulinkSystem parent, String name) {
+    public ElectricalReference(ISimulinkSystem parent, String name) {
 		super(parent, name);
-    }
-    
+    }    
+
     @Override
-    public void initialize() {		
-    	//Represents the number of instance created
-    	num = num + 1;   	
+    public void initialize() {
+		//Represents the number of instance created
+		num = num + 1;
 		
         // Initialize inputs and outputs if necessary
         this.inputs.add(new SimulinkPort(1, this));
 
-        // Initialize parameters specific to the block
-        this.parameters.add(new SimulinkParameter<Integer>("NumInputPorts", this));
+        // Initialize parameters specific to the Sine Wave block
     }
     
     @Override
@@ -32,7 +31,7 @@ public class ScopeBlock extends SimulinkBlock {
         	if(name == null) {
 	        	name = BLOCK_NAME + num;
         	}
-
+        	
         	String combinedPath = this.parent.getModelName() + "/" + name;
         	matlab.eval("add_block('" + BLOCK_PATH + "', '" + combinedPath + "')");
         	
@@ -49,4 +48,5 @@ public class ScopeBlock extends SimulinkBlock {
         }
     }
 }
+
 

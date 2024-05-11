@@ -10,30 +10,30 @@ public class GainBlock extends SimulinkBlock {
 	private static final String BLOCK_PATH = "simulink/Math Operations/Gain";
     private static int num = 0;
 
-    public GainBlock(ISimulinkSystem parent) {
-        super(parent);
+    public GainBlock(ISimulinkSystem parent, String name) {
+		super(parent, name);
     }    
 
     @Override
     public void initialize() {
     	//Represents the number of instance created
     	num = num + 1;	   	
-		name = BLOCK_NAME + num;
 		
         // Initialize inputs and outputs if necessary
-        this.inputs = new ArrayList<>(); 
-        this.outputs = new ArrayList<>();
 		this.inputs.add(new SimulinkPort(1, this));
-        this.outputs.add(new SimulinkPort(1, this)); 
+        this.outputs.add(new SimulinkPort(2, this)); 
 
         // Initialize parameters specific to the Sine Wave block
-        this.parameters = new ArrayList<>();
         this.parameters.add(new SimulinkParameter<Double>("Gain", this));
     }
     
     @Override
     public void generateModel(MatlabEngine matlab) {
         try {
+        	if(name == null) {
+	        	name = BLOCK_NAME + num;
+        	}
+        	
         	String combinedPath = this.parent.getModelName() + "/" + name;
         	matlab.eval("add_block('" + BLOCK_PATH + "', '" + combinedPath + "')");
         	

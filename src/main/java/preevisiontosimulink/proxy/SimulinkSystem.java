@@ -15,13 +15,15 @@ public class SimulinkSystem implements ISimulinkSystem {
     }
     
     @Override
-    public void addBlock(ISimulinkBlock block) {
+    public ISimulinkBlock addBlock(ISimulinkBlock block) {
         blockList.add(block);
+        return block;
     }
 
     @Override
-    public void addRelation(SimulinkRelation relation) {
+    public SimulinkRelation addRelation(SimulinkRelation relation) {
         relationList.add(relation);
+        return relation;
     }
     
 	@Override
@@ -50,6 +52,8 @@ public class SimulinkSystem implements ISimulinkSystem {
             for (SimulinkRelation relation : relationList) {
                 relation.generateModel(matlab);
             }
+            
+            matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + modelName + "')");
             
             // Save the model
             String modelFilePath = "" + modelName + ".slx";

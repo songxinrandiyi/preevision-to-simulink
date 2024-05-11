@@ -20,7 +20,7 @@ public class ShortCircuitSimulation {
             matlab.eval("set_param('ShortCircuitModel/VoltageSource', 'v0', '10')");
             matlab.eval("set_param('ShortCircuitModel/Resistor', 'R', '100')");
             
-            // Get the position of blocks
+            // Get the position of ports
             matlab.eval("position_voltageSource = get_param('ShortCircuitModel/VoltageSource', 'PortConnectivity')");
             matlab.eval("position_resistor = get_param('ShortCircuitModel/Resistor', 'PortConnectivity')");
             matlab.eval("position_ground = get_param('ShortCircuitModel/Ground', 'PortConnectivity')");
