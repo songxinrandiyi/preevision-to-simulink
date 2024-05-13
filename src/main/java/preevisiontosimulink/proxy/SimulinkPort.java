@@ -2,9 +2,9 @@ package preevisiontosimulink.proxy;
 
 public class SimulinkPort implements ISimulinkPort {
     private int index;
-    private ISimulinkBlock parent;
+    private SimulinkBlock parent;
 
-    public SimulinkPort(int index, ISimulinkBlock parent) {
+    public SimulinkPort(int index, SimulinkBlock parent) {
         this.index = index;
         this.parent = parent;
     }
@@ -15,7 +15,7 @@ public class SimulinkPort implements ISimulinkPort {
     }
 
     @Override
-    public ISimulinkBlock getParent() {
+    public SimulinkBlock getParent() {
         return parent;
     }
 }

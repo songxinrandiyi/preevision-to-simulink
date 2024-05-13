@@ -1,0 +1,15 @@
+close_system('hii');
+new_system('hii','Model');
+open_system('hii');
+add_block('fl_lib/Electrical/Electrical Sources/DC Voltage Source', 'hii/DC');
+add_block('fl_lib/Electrical/Electrical Elements/Resistor', 'hii/r1');
+add_block('fl_lib/Electrical/Electrical Elements/Resistor', 'hii/r2');
+pos_r1 = get_param('hii/r1', 'PortConnectivity');
+pos_r2 = get_param('hii/r2', 'PortConnectivity');
+pos_DC = get_param('hii/DC', 'PortConnectivity');
+add_line('hii', [pos_DC(1).Position ; pos_r1(1).Position]);
+add_line('hii', [pos_r1(2).Position ; pos_DC(2).Position]);
+%add_line('hii', [pos_r1(1).Position ; pos_r2(1).Position]);
+%add_line('hii', [pos_r1(2).Position ; pos_r2(2).Position]);
+
+Simulink.BlockDiagram.arrangeSystem('hii');

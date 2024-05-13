@@ -11,6 +11,8 @@ public class SimulinkBlock implements ISimulinkBlock {
     protected List<SimulinkPort> outputs;
     protected List<SimulinkParameter<?>> parameters;
     protected ISimulinkSystem parent;
+	protected String BLOCK_NAME = "";
+	protected String BLOCK_PATH = "";
     
     public SimulinkBlock(ISimulinkSystem parent, String name) {
 		this.name = name;
@@ -38,7 +40,21 @@ public class SimulinkBlock implements ISimulinkBlock {
 
     @Override
     public void generateModel(MatlabEngine matlab) {
-
+        try {
+        	String combinedPath = generateCombinedPath();
+        	matlab.eval("add_block('" + BLOCK_PATH + "', '" + combinedPath + "')");
+        	
+        	System.out.println("Simulink block generated: " + combinedPath);
+            for (SimulinkParameter<?> param : getParameters()) {
+            	if(param.getValue() != null) {
+            		matlab.eval("set_param('" + combinedPath + "', '" + param.getName() + "', '" + param.getValue().toString() + "')");
+            		
+					System.out.println("set_param('" + combinedPath + "', '" + param.getName() + "', '" + param.getValue().toString() + "')");
+				} 
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -78,5 +94,16 @@ public class SimulinkBlock implements ISimulinkBlock {
 	@Override
 	public ISimulinkSystem getParent() {
 		return parent;
+	}
+	
+	@Override
+	public String generateCombinedPath() {
+	    StringBuilder pathBuilder = new StringBuilder(name);
+	    ISimulinkSystem currentParent = parent;
+	    while (currentParent != null) {
+	        pathBuilder.insert(0, currentParent.getName() + "/");
+	        currentParent = currentParent.getParent();
+	    }
+	    return pathBuilder.toString();
 	}
 }

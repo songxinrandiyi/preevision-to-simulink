@@ -6,14 +6,21 @@ import java.util.List;
 import com.mathworks.engine.*;
 
 public class SimulinkSystem implements ISimulinkSystem {
-	private String modelName;
+	private ISimulinkSystem parent = null;
+	private String name;
     private List<ISimulinkBlock> blockList = new ArrayList<>();
     private List<SimulinkRelation> relationList = new ArrayList<>();
+    private List<SimulinkSubsystem> subsystemList = new ArrayList<>();
     
-    public SimulinkSystem(String modelName) {
-        this.modelName = modelName;
+    public SimulinkSystem(String name) {
+		this.name = name;
     }
     
+    @Override
+	public String getName() {
+		return name;
+	}
+       
     @Override
     public ISimulinkBlock addBlock(ISimulinkBlock block) {
         blockList.add(block);
@@ -36,13 +43,18 @@ public class SimulinkSystem implements ISimulinkSystem {
 		return null;	
 	}
 
-    @Override
     public void generateModel() {
         try {
             // Start the MATLAB engine
             MatlabEngine matlab = MatlabEngine.startMatlab();          
             // Generate the Simulink model (example)
-            matlab.eval(modelName + " = new_system('" + modelName + "', 'Model')");
+            matlab.eval(name + " = new_system('" + name + "', 'Model')");
+            
+			// Generate the Simulink model for each subsystem in the subsystemList
+			for (SimulinkSubsystem subsystem : subsystemList) {
+				subsystem.generateModel(matlab);
+			}
+			
             // Generate the Simulink model for each block in the blockList
             for (ISimulinkBlock block : blockList) {
                 block.generateModel(matlab);
@@ -53,13 +65,13 @@ public class SimulinkSystem implements ISimulinkSystem {
                 relation.generateModel(matlab);
             }
             
-            matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + modelName + "')");
+            matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + name + "')");
             
             // Save the model
-            String modelFilePath = "" + modelName + ".slx";
-            matlab.eval("save_system('" + modelName + "', '" + modelFilePath + "')");
+            String modelFilePath = "" + name + ".slx";
+            matlab.eval("save_system('" + name + "', '" + modelFilePath + "')");
 
-            System.out.println("Simulink model generated: " + modelName);
+            System.out.println("Simulink model generated: " + name);
 
             // Close the MATLAB engine
             matlab.close();
@@ -79,8 +91,19 @@ public class SimulinkSystem implements ISimulinkSystem {
     }
 
 	@Override
-	public String getModelName() {
-		return modelName;
+	public SimulinkSubsystem addSubsystem(SimulinkSubsystem subsystem) {
+		subsystemList.add(subsystem);
+		return subsystem;
+	}
+
+	@Override
+	public ISimulinkSystem getParent() {
+		return parent;
+	}
+
+	@Override
+	public List<SimulinkSubsystem> getSubsystemList() {
+		return subsystemList;
 	}
 }
 

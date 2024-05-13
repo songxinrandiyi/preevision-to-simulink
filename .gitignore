@@ -15,9 +15,11 @@ lib/
 
 *.xlsx
 
-.arxml
+*.arxml
 
-.vec
+*.vec
+
+*.m
 
 
 

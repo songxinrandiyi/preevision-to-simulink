@@ -8,6 +8,8 @@ import preevisiontosimulink.proxy.*;
 public class ModelGenerator {
     public static void generateModel(String modelName) {
         SimulinkSystem system = new SimulinkSystem(modelName);
+        SimulinkSubsystem lastSubsystem;
+        SimulinkSubsystem secondLastSubsystem;
         /*
         matlab.eval("add_block('simulink/Sources/Sine Wave', '" + modelName + "/Sine')");
         matlab.eval("add_block('simulink/Math Operations/Gain', '" + modelName + "/Gain')");
@@ -15,17 +17,25 @@ public class ModelGenerator {
         matlab.eval("add_line('" + modelName + "', 'Sine/1', 'Gain/1')");
         matlab.eval("add_line('" + modelName + "', 'Gain/1', 'Scope/1')");
         matlab.eval("set_param('" + modelName + "/Gain', 'Gain', '2')");
-        */
-		
-		system.addBlock(new DCVoltageSource(system, null));
-		getLastBlock(system.getBlockList()).setParameter("v0", 10);
+        
+        system.addSubsystem(new SimulinkSubsystem(system, null));
+        lastSubsystem = getLastSubsystem(system.getSubsystemList());
+        lastSubsystem.addBlock(new Resistor(lastSubsystem, null));
+        getLastBlock(lastSubsystem.getBlockList()).setParameter("R", 10);
+		*/
+        
+		system.addBlock(new DCVoltageSource(system, null));	
 		system.addBlock(new Resistor(system, null));
-		getLastBlock(system.getBlockList()).setParameter("R", 50);
-		system.addRelation(new SimulinkRelation(getSecondLastBlock(system.getBlockList()).getOutputs().get(0), getLastBlock(system.getBlockList()).getInputs().get(0), system));
+		system.addBlock(new Resistor(system, null));
 		
-		system.addBlock(new ElectricalReference(system, null));
-		system.addRelation(new SimulinkRelation(getSecondLastBlock(system.getBlockList()).getOutputs().get(0), getLastBlock(system.getBlockList()).getInputs().get(0), system));			
-				
+		system.getBlock("DCVoltageSource0").setParameter("v0", 10);
+		system.getBlock("Resistor0").setParameter("R", 50);
+		system.getBlock("Resistor1").setParameter("R", 10);
+		
+		system.addRelation(new SimulinkRelation(system.getBlock("DCVoltageSource0"), system.getBlock("Resistor0"), 1, 1, system));
+		system.addRelation(new SimulinkRelation(system.getBlock("Resistor0"), system.getBlock("Resistor1"), 1, 1, system));	
+		system.addRelation(new SimulinkRelation(system.getBlock("Resistor0"), system.getBlock("Resistor1"), 2, 2, system));
+		system.addRelation(new SimulinkRelation(system.getBlock("Resistor0"), system.getBlock("DCVoltageSource0"), 2, 2, system));
         system.generateModel();
     }
     
@@ -42,11 +52,18 @@ public class ModelGenerator {
         }
         return blockList.get(blockList.size() - 2);
     }
-    
-	public static ISimulinkBlock getThirdLastBlock(List<ISimulinkBlock> blockList) {
-		if (blockList.isEmpty()) {
+	
+	public static SimulinkSubsystem getLastSubsystem(List<SimulinkSubsystem> subsystemList) {
+		if (subsystemList.isEmpty()) {
 			return null; // Liste ist leer, gib null zurück
 		}
-		return blockList.get(blockList.size() - 3);
+		return subsystemList.get(subsystemList.size() - 1);
+	}
+	
+	public static SimulinkSubsystem getSecondLastSubsystem(List<SimulinkSubsystem> subsystemList) {
+		if (subsystemList.isEmpty()) {
+			return null; // Liste ist leer, gib null zurück
+		}
+		return subsystemList.get(subsystemList.size() - 2);
 	}
 }

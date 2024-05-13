@@ -15,4 +15,5 @@ public interface ISimulinkBlock extends ISimulinkParameterizable {
     ISimulinkSystem getParent();
     void generateModel(MatlabEngine matlab);
     void initialize();
+    String generateCombinedPath();
 }
