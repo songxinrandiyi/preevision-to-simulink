@@ -3,7 +3,13 @@ package preevisiontosimulink.generator;
 import java.util.List;
 
 import preevisiontosimulink.library.*;
-import preevisiontosimulink.proxy.*;
+import preevisiontosimulink.proxy.block.ISimulinkBlock;
+import preevisiontosimulink.proxy.relation.SimulinkExternRelation;
+import preevisiontosimulink.proxy.relation.SimulinkRelation;
+import preevisiontosimulink.proxy.system.LSubsystemInterface;
+import preevisiontosimulink.proxy.system.RSubsystemInterface;
+import preevisiontosimulink.proxy.system.SimulinkSubsystem;
+import preevisiontosimulink.proxy.system.SimulinkSystem;
 
 public class ModelGenerator {
     public static void generateModel(String modelName) {
@@ -27,15 +33,37 @@ public class ModelGenerator {
 		system.addBlock(new DCVoltageSource(system, null));	
 		system.addBlock(new Resistor(system, null));
 		system.addBlock(new Resistor(system, null));
+		system.addBlock(new ElectricalReference(system, "Ref1"));
+		system.addBlock(new SolverConfiguration(system, "Solver1"));
+		system.addSubsystem(new SimulinkSubsystem(system, null));
+		lastSubsystem = system.getSubsystem("Subsystem1");
+		lastSubsystem.addBlock(new Resistor(lastSubsystem, "Resistor1"));
+		lastSubsystem.addBlock(new Resistor(lastSubsystem, "Resistor2"));
+		lastSubsystem.addBlock(new LConnection(lastSubsystem, "LConn1"));
+		lastSubsystem.addInPort(new LSubsystemInterface(1, lastSubsystem));
+		lastSubsystem.addBlock(new RConnection(lastSubsystem, "RConn1"));
+		lastSubsystem.addOutPort(new RSubsystemInterface(1, lastSubsystem));
 		
-		system.getBlock("DCVoltageSource0").setParameter("v0", 10);
-		system.getBlock("Resistor0").setParameter("R", 50);
-		system.getBlock("Resistor1").setParameter("R", 10);
 		
-		system.addRelation(new SimulinkRelation(system.getBlock("DCVoltageSource0"), system.getBlock("Resistor0"), 1, 1, system));
-		system.addRelation(new SimulinkRelation(system.getBlock("Resistor0"), system.getBlock("Resistor1"), 1, 1, system));	
-		system.addRelation(new SimulinkRelation(system.getBlock("Resistor0"), system.getBlock("Resistor1"), 2, 2, system));
-		system.addRelation(new SimulinkRelation(system.getBlock("Resistor0"), system.getBlock("DCVoltageSource0"), 2, 2, system));
+		system.getBlock("DCVoltageSource1").setParameter("v0", 10);
+		system.getBlock("Resistor1").setParameter("R", 50);
+		system.getBlock("Resistor2").setParameter("R", 10);
+		lastSubsystem.getBlock("Resistor1").setParameter("R", 20);
+		lastSubsystem.getBlock("Resistor2").setParameter("R", 25);
+		
+		system.addRelation(new SimulinkRelation(system.getBlock("DCVoltageSource1").getInPort(0), system.getBlock("Resistor1").getInPort(0), system));
+		system.addRelation(new SimulinkExternRelation(system.getBlock("Resistor1").getOutPort(0), lastSubsystem.getInPort(0), system));
+		system.addRelation(new SimulinkExternRelation(system.getBlock("DCVoltageSource1").getOutPort(0), lastSubsystem.getOutPort(0), system));
+		system.addRelation(new SimulinkRelation(system.getBlock("Resistor1").getInPort(0), system.getBlock("Resistor2").getInPort(0), system));
+		system.addRelation(new SimulinkRelation(system.getBlock("Resistor1").getOutPort(0), system.getBlock("Resistor2").getOutPort(0), system));
+		system.addRelation(new SimulinkRelation(system.getBlock("Ref1").getInPort(0), system.getBlock("DCVoltageSource1").getOutPort(0), system));
+		system.addRelation(new SimulinkRelation(system.getBlock("Solver1").getInPort(0), system.getBlock("Ref1").getInPort(0), system));
+		
+		system.addRelation(new SimulinkRelation(lastSubsystem.getBlock("LConn1").getInPort(0), lastSubsystem.getBlock("Resistor1").getInPort(0), lastSubsystem));
+		system.addRelation(new SimulinkRelation(lastSubsystem.getBlock("Resistor1").getOutPort(0), lastSubsystem.getBlock("RConn1").getInPort(0), lastSubsystem));
+		system.addRelation(new SimulinkRelation(lastSubsystem.getBlock("Resistor1").getInPort(0), lastSubsystem.getBlock("Resistor2").getInPort(0), lastSubsystem));
+		system.addRelation(new SimulinkRelation(lastSubsystem.getBlock("Resistor1").getOutPort(0), lastSubsystem.getBlock("Resistor2").getOutPort(0), lastSubsystem));
+		
         system.generateModel();
     }
     

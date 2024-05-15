@@ -1,4 +1,4 @@
-package preevisiontosimulink.proxy;
+package preevisiontosimulink.proxy.block;
 
 import java.util.List;
 

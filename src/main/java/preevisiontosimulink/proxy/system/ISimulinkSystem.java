@@ -1,16 +1,20 @@
-package preevisiontosimulink.proxy;
+package preevisiontosimulink.proxy.system;
 
 import java.util.List;
+
+import preevisiontosimulink.proxy.block.ISimulinkBlock;
+import preevisiontosimulink.proxy.relation.ISimulinkRelation;
 
 public interface ISimulinkSystem {
 	ISimulinkSystem getParent();
 	SimulinkSubsystem addSubsystem(SimulinkSubsystem subsystem);
     ISimulinkBlock addBlock(ISimulinkBlock block);
     ISimulinkBlock getBlock(String name);
-    SimulinkRelation addRelation(SimulinkRelation relation);
+    ISimulinkRelation addRelation(ISimulinkRelation relation);
     List<ISimulinkBlock> getBlockList();
-    List<SimulinkRelation> getRelationList();
+    List<ISimulinkRelation> getRelationList();
 	List<SimulinkSubsystem> getSubsystemList();
+	SimulinkSubsystem getSubsystem(String name);
     String getName();
 }
 

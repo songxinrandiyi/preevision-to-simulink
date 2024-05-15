@@ -1,4 +1,4 @@
-package preevisiontosimulink.proxy;
+package preevisiontosimulink.proxy.block;
 
 public class SimulinkParameter<T> {
     private String name;

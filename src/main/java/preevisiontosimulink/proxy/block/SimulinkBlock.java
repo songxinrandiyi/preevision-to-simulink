@@ -1,14 +1,17 @@
-package preevisiontosimulink.proxy;
+package preevisiontosimulink.proxy.block;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.mathworks.engine.*;
 
+import preevisiontosimulink.proxy.port.ISimulinkPort;
+import preevisiontosimulink.proxy.system.ISimulinkSystem;
+
 public class SimulinkBlock implements ISimulinkBlock {
     protected String name;
-    protected List<SimulinkPort> inputs;
-    protected List<SimulinkPort> outputs;
+    protected List<ISimulinkPort> inPorts;
+	protected List<ISimulinkPort> outPorts;
     protected List<SimulinkParameter<?>> parameters;
     protected ISimulinkSystem parent;
 	protected String BLOCK_NAME = "";
@@ -17,21 +20,43 @@ public class SimulinkBlock implements ISimulinkBlock {
     public SimulinkBlock(ISimulinkSystem parent, String name) {
 		this.name = name;
         this.parent = parent;
-        this.inputs = new ArrayList<>(); 
-        this.outputs = new ArrayList<>();
+        this.inPorts = new ArrayList<>(); 
+		this.outPorts = new ArrayList<>();
 		this.parameters = new ArrayList<>();
         this.initialize();
     }
     
     @Override
-    public List<SimulinkPort> getInputs() {
-        return inputs;
-    }
+	public ISimulinkPort addInPort(ISimulinkPort port) {
+		inPorts.add(port);
+		return port;
+	}
     
     @Override
-    public List<SimulinkPort> getOutputs() {
-        return outputs;
+    public ISimulinkPort getInPort(int index) {
+        return inPorts.get(index);
     }
+    
+	@Override
+	public List<ISimulinkPort> getInPorts() {
+		return inPorts;
+	}
+	
+	@Override
+	public ISimulinkPort addOutPort(ISimulinkPort port) {
+		outPorts.add(port);
+		return port;
+	}
+	
+	@Override
+	public ISimulinkPort getOutPort(int index) {
+		return outPorts.get(index);
+	}
+	
+	@Override
+	public List<ISimulinkPort> getOutPorts() {
+		return outPorts;
+	}
        
 	@Override
 	public String getName() {

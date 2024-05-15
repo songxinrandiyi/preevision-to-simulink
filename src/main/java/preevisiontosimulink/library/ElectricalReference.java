@@ -3,10 +3,13 @@ package preevisiontosimulink.library;
 import java.util.ArrayList;
 import com.mathworks.engine.*;
 import preevisiontosimulink.proxy.*;
+import preevisiontosimulink.proxy.block.SimulinkBlock;
+import preevisiontosimulink.proxy.port.LConnectionPort;
+import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
 
 public class ElectricalReference extends SimulinkBlock {
-    private static int num = 0;
+    private static int num = 1;
 
     public ElectricalReference(ISimulinkSystem parent, String name) {
 		super(parent, name);
@@ -21,7 +24,7 @@ public class ElectricalReference extends SimulinkBlock {
     	}
 		num++;
         // Initialize inputs and outputs if necessary
-        this.inputs.add(new SimulinkPort(1, this));
+        this.inPorts.add(new LConnectionPort(1, this)); 
 
         // Initialize parameters specific to the Sine Wave block
     }

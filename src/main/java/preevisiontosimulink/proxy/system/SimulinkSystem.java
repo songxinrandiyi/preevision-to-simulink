@@ -1,15 +1,18 @@
-package preevisiontosimulink.proxy;
+package preevisiontosimulink.proxy.system;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.mathworks.engine.*;
 
+import preevisiontosimulink.proxy.block.ISimulinkBlock;
+import preevisiontosimulink.proxy.relation.ISimulinkRelation;
+
 public class SimulinkSystem implements ISimulinkSystem {
 	private ISimulinkSystem parent = null;
 	private String name;
     private List<ISimulinkBlock> blockList = new ArrayList<>();
-    private List<SimulinkRelation> relationList = new ArrayList<>();
+    private List<ISimulinkRelation> relationList = new ArrayList<>();
     private List<SimulinkSubsystem> subsystemList = new ArrayList<>();
     
     public SimulinkSystem(String name) {
@@ -28,7 +31,7 @@ public class SimulinkSystem implements ISimulinkSystem {
     }
 
     @Override
-    public SimulinkRelation addRelation(SimulinkRelation relation) {
+    public ISimulinkRelation addRelation(ISimulinkRelation relation) {
         relationList.add(relation);
         return relation;
     }
@@ -61,11 +64,11 @@ public class SimulinkSystem implements ISimulinkSystem {
             }
             
             // Generate the Simulink model for each relation in the relationList
-            for (SimulinkRelation relation : relationList) {
+            for (ISimulinkRelation relation : relationList) {
                 relation.generateModel(matlab);
             }
             
-            matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + name + "')");
+            //matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + name + "')");
             
             // Save the model
             String modelFilePath = "" + name + ".slx";
@@ -86,7 +89,7 @@ public class SimulinkSystem implements ISimulinkSystem {
     }
 
     @Override
-    public List<SimulinkRelation> getRelationList() {
+    public List<ISimulinkRelation> getRelationList() {
         return relationList;
     }
 
@@ -104,6 +107,16 @@ public class SimulinkSystem implements ISimulinkSystem {
 	@Override
 	public List<SimulinkSubsystem> getSubsystemList() {
 		return subsystemList;
+	}
+
+	@Override
+	public SimulinkSubsystem getSubsystem(String name) {
+		for (SimulinkSubsystem subsystem : subsystemList) {
+			if (subsystem.getName().equals(name)) {
+				return subsystem;
+			}
+		}
+		return null;
 	}
 }
 

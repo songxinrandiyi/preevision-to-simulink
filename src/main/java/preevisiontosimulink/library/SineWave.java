@@ -3,10 +3,14 @@ package preevisiontosimulink.library;
 import java.util.ArrayList;
 import com.mathworks.engine.*;
 import preevisiontosimulink.proxy.*;
+import preevisiontosimulink.proxy.block.SimulinkBlock;
+import preevisiontosimulink.proxy.block.SimulinkParameter;
+import preevisiontosimulink.proxy.port.SimulinkPort;
+import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
 
 public class SineWave extends SimulinkBlock {
-    private static int num = 0;
+    private static int num = 1;
 
     public SineWave(ISimulinkSystem parent, String name) {
     	super(parent, name);
@@ -21,7 +25,8 @@ public class SineWave extends SimulinkBlock {
     	}
 		num++;
         // Initialize inputs and outputs if necessary
-        this.outputs.add(new SimulinkPort(1, this));
+        this.inPorts.add(new SimulinkPort("1", this));
+        this.outPorts.add(new SimulinkPort("1", this));
 
         // Initialize parameters specific to the block
         this.parameters.add(new SimulinkParameter<Double>("Amplitude", this));

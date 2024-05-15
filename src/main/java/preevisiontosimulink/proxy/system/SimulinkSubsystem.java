@@ -1,23 +1,24 @@
-package preevisiontosimulink.proxy;
+package preevisiontosimulink.proxy.system;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.mathworks.engine.*;
 
-import preevisiontosimulink.library.Inport;
-import preevisiontosimulink.library.Outport;
+import preevisiontosimulink.proxy.block.ISimulinkBlock;
+import preevisiontosimulink.proxy.relation.ISimulinkRelation;
+
 
 public class SimulinkSubsystem implements ISimulinkSystem {
 	private static final String BLOCK_NAME = "Subsystem";
 	private static final String BLOCK_PATH = "simulink/Ports & Subsystems/Subsystem";
 	private ISimulinkSystem parent;
 	private String name;
-	private static int num = 0;
-	private List<Inport> inportList = new ArrayList<>();
-	private List<Outport> outportList = new ArrayList<>();
+	private static int num = 1;
+	private List<LSubsystemInterface> inPorts = new ArrayList<>();
+	private List<RSubsystemInterface> outPorts = new ArrayList<>();
     private List<ISimulinkBlock> blockList = new ArrayList<>();
-    private List<SimulinkRelation> relationList = new ArrayList<>();
+    private List<ISimulinkRelation> relationList = new ArrayList<>();
     private List<SimulinkSubsystem> subsystemList = new ArrayList<>();
     
     public SimulinkSubsystem(ISimulinkSystem parent, String name) {
@@ -34,22 +35,30 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		return parent;
 	}
 	
-	public Inport addInport(Inport inport) {
-		inportList.add(inport);
-		return inport;
+	public LSubsystemInterface addInPort(LSubsystemInterface port) {
+		inPorts.add(port);
+		return port;
 	}
 	
-	public Outport addOutport(Outport outport) {
-		outportList.add(outport);
-		return outport;
+	public LSubsystemInterface getInPort(int index) {
+		return inPorts.get(index);
 	}
 	
-	public List<Inport> getInportList() {
-		return inportList;
+	public List<LSubsystemInterface> getInPorts() {
+		return inPorts;
 	}
 	
-	public List<Outport> getOutportList() {
-		return outportList;
+	public RSubsystemInterface addOutPort(RSubsystemInterface port) {
+		outPorts.add(port);
+		return port;
+	}
+	
+	public RSubsystemInterface getOutPort(int index) {
+		return outPorts.get(index);
+	}
+	
+	public List<RSubsystemInterface> getOutPorts() {
+		return outPorts;
 	}
 	
 	@Override
@@ -58,18 +67,7 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 	}
            
 	@Override
-    public ISimulinkBlock addBlock(ISimulinkBlock block) {
-		if(block instanceof Inport) {
-			inportList.add((Inport)block);
-		} else if(block instanceof Outport) {
-			outportList.add((Outport)block);
-		}
-        blockList.add(block);
-        return block;
-    }
-
-	@Override
-    public SimulinkRelation addRelation(SimulinkRelation relation) {
+    public ISimulinkRelation addRelation(ISimulinkRelation relation) {
         relationList.add(relation);
         return relation;
     }
@@ -105,11 +103,11 @@ public class SimulinkSubsystem implements ISimulinkSystem {
             }
             
             // Generate the Simulink model for each relation in the relationList
-            for (SimulinkRelation relation : relationList) {
+            for (ISimulinkRelation relation : relationList) {
                 relation.generateModel(matlab);
             }
             
-            matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + combinedPath + "')");
+            //matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + combinedPath + "')");
             
 
             System.out.println("Simulink subsystem generated: " + combinedPath);
@@ -124,7 +122,7 @@ public class SimulinkSubsystem implements ISimulinkSystem {
     }
 
 	@Override
-    public List<SimulinkRelation> getRelationList() {
+    public List<ISimulinkRelation> getRelationList() {
         return relationList;
     }
 
@@ -145,6 +143,22 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		
 	public List<SimulinkSubsystem> getSubsystemList() {
 		return subsystemList;
+	}
+
+	@Override
+	public ISimulinkBlock addBlock(ISimulinkBlock block) {
+		blockList.add(block);
+		return block;
+	}
+
+	@Override
+	public SimulinkSubsystem getSubsystem(String name) {
+		for (SimulinkSubsystem subsystem : subsystemList) {
+			if (subsystem.getName().equals(name)) {
+				return subsystem;
+			}
+		}
+		return null;
 	}
 }
 

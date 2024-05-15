@@ -1,9 +1,14 @@
 package preevisiontosimulink.library;
 
 import preevisiontosimulink.proxy.*;
+import preevisiontosimulink.proxy.block.SimulinkBlock;
+import preevisiontosimulink.proxy.port.SimulinkPort;
+import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
 
 public class Outport extends SimulinkBlock {
+
+	private static int num = 1;
 
     public Outport(ISimulinkSystem parent, String name) {
 		super(parent, name);
@@ -13,12 +18,13 @@ public class Outport extends SimulinkBlock {
     public void initialize() {
     	this.BLOCK_NAME = "Out";
     	this.BLOCK_PATH = "simulink/Commonly Used Blocks/Out1";
+    	if(name == null) {
+        	this.name = BLOCK_NAME + num;
+    	}
+		num++;
     	
         // Initialize inputs and outputs if necessary
-        this.inputs.add(new SimulinkPort(1, this));
-
-        // Initialize parameters specific to the Sine Wave block
-        this.parameters.add(new SimulinkParameter<Double>("R", this));
+        this.outPorts.add(new SimulinkPort("1", this));
     }
 }
 
