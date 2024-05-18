@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.mathworks.engine.*;
 
+import preevisiontosimulink.library.*;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
 import preevisiontosimulink.proxy.relation.ISimulinkRelation;
 
@@ -15,8 +16,8 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 	private ISimulinkSystem parent;
 	private String name;
 	private static int num = 1;
-	private List<LSubsystemInterface> inPorts = new ArrayList<>();
-	private List<RSubsystemInterface> outPorts = new ArrayList<>();
+	private List<LConnection> inPorts = new ArrayList<>();
+	private List<RConnection> outPorts = new ArrayList<>();
     private List<ISimulinkBlock> blockList = new ArrayList<>();
     private List<ISimulinkRelation> relationList = new ArrayList<>();
     private List<SimulinkSubsystem> subsystemList = new ArrayList<>();
@@ -35,30 +36,85 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		return parent;
 	}
 	
-	public LSubsystemInterface addInPort(LSubsystemInterface port) {
+	public LConnection addInPort(LConnection port) {
 		inPorts.add(port);
 		return port;
 	}
 	
-	public LSubsystemInterface getInPort(int index) {
+	public LConnection getInPort(int index) {
 		return inPorts.get(index);
 	}
 	
-	public List<LSubsystemInterface> getInPorts() {
+	public LConnection getInPort(String name) {
+		for (LConnection port : inPorts) {
+			if (port.getName().equals(name)) {
+				return port;
+			}
+		}
+		return null;
+	}
+	
+	public int getInPortIndex(String name) {
+	    for (int i = 0; i < inPorts.size(); i++) {
+	        if (inPorts.get(i).getName().equals(name)) {
+	            return i+1;
+	        }
+	    }
+	    // If the port with the given name is not found, return -1 or handle it as needed
+	    return -1;  // or throw new IllegalArgumentException("Input port not found: " + name);
+	}
+
+	
+	public List<LConnection> getInPorts() {
 		return inPorts;
 	}
 	
-	public RSubsystemInterface addOutPort(RSubsystemInterface port) {
+	public RConnection addOutPort(RConnection port) {
 		outPorts.add(port);
 		return port;
 	}
 	
-	public RSubsystemInterface getOutPort(int index) {
+	public RConnection getOutPort(int index) {
 		return outPorts.get(index);
 	}
 	
-	public List<RSubsystemInterface> getOutPorts() {
+	public RConnection getOutPort(String name) {
+		for (RConnection port : outPorts) {
+			if (port.getName().equals(name)) {
+				return port;
+			}
+		}
+		return null;
+	}
+	
+	public int getOutPortIndex(String name) {
+	    for (int i = 0; i < outPorts.size(); i++) {
+	        if (outPorts.get(i).getName().equals(name)) {
+	            return i+1;
+	        }
+	    }
+	    // If the port with the given name is not found, return -1 or handle it as needed
+	    return -1;  // or throw new IllegalArgumentException("Output port not found: " + name);
+	}
+	
+	public List<RConnection> getOutPorts() {
 		return outPorts;
+	}	
+	
+	public String getPortPath(String name) {
+	    for (int i = 0; i < inPorts.size(); i++) {
+	        if (inPorts.get(i).getName().equals(name)) {
+	        	int n = i+1;
+	            return "LConn" + n;
+	        }
+	    }
+	    for (int i = 0; i < outPorts.size(); i++) {
+	        if (outPorts.get(i).getName().equals(name)) {
+	        	int n = i+1;
+	            return "RConn" + n;
+	        }
+	    }
+	    return null;
 	}
 	
 	@Override
@@ -102,12 +158,22 @@ public class SimulinkSubsystem implements ISimulinkSystem {
                 block.generateModel(matlab);
             }
             
+			// Generate the Simulink model for each LConnection in the inPorts
+			for (LConnection port : inPorts) {
+				port.generateModel(matlab);
+			}
+			
+			// Generate the Simulink model for each RConnection in the outPorts
+			for (RConnection port : outPorts) {
+				port.generateModel(matlab);
+			}
+            
             // Generate the Simulink model for each relation in the relationList
             for (ISimulinkRelation relation : relationList) {
                 relation.generateModel(matlab);
             }
             
-            //matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + combinedPath + "')");
+            matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + combinedPath + "')");
             
 
             System.out.println("Simulink subsystem generated: " + combinedPath);

@@ -1,4 +1,4 @@
-package preevisiontosimulink.parser.elements;
+package preevisiontosimulink.parser.kblelements;
 
 import java.util.List;
 import javax.xml.bind.annotation.*;

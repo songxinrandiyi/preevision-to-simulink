@@ -6,8 +6,6 @@ import preevisiontosimulink.library.*;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
 import preevisiontosimulink.proxy.relation.SimulinkExternRelation;
 import preevisiontosimulink.proxy.relation.SimulinkRelation;
-import preevisiontosimulink.proxy.system.LSubsystemInterface;
-import preevisiontosimulink.proxy.system.RSubsystemInterface;
 import preevisiontosimulink.proxy.system.SimulinkSubsystem;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
 
@@ -39,10 +37,8 @@ public class ModelGenerator {
 		lastSubsystem = system.getSubsystem("Subsystem1");
 		lastSubsystem.addBlock(new Resistor(lastSubsystem, "Resistor1"));
 		lastSubsystem.addBlock(new Resistor(lastSubsystem, "Resistor2"));
-		lastSubsystem.addBlock(new LConnection(lastSubsystem, "LConn1"));
-		lastSubsystem.addInPort(new LSubsystemInterface(1, lastSubsystem));
-		lastSubsystem.addBlock(new RConnection(lastSubsystem, "RConn1"));
-		lastSubsystem.addOutPort(new RSubsystemInterface(1, lastSubsystem));
+		lastSubsystem.addInPort(new LConnection(lastSubsystem, "LConn1"));
+		lastSubsystem.addOutPort(new RConnection(lastSubsystem, "RConn1"));
 		
 		
 		system.getBlock("DCVoltageSource1").setParameter("v0", 10);
@@ -52,15 +48,15 @@ public class ModelGenerator {
 		lastSubsystem.getBlock("Resistor2").setParameter("R", 25);
 		
 		system.addRelation(new SimulinkRelation(system.getBlock("DCVoltageSource1").getInPort(0), system.getBlock("Resistor1").getInPort(0), system));
-		system.addRelation(new SimulinkExternRelation(system.getBlock("Resistor1").getOutPort(0), lastSubsystem.getInPort(0), system));
-		system.addRelation(new SimulinkExternRelation(system.getBlock("DCVoltageSource1").getOutPort(0), lastSubsystem.getOutPort(0), system));
+		system.addRelation(new SimulinkExternRelation(system.getBlock("Resistor1").getOutPort(0), "Subsystem1", "LConn1" ,system));
+		system.addRelation(new SimulinkExternRelation(system.getBlock("DCVoltageSource1").getOutPort(0),  "Subsystem1", "RConn1" , system));
 		system.addRelation(new SimulinkRelation(system.getBlock("Resistor1").getInPort(0), system.getBlock("Resistor2").getInPort(0), system));
 		system.addRelation(new SimulinkRelation(system.getBlock("Resistor1").getOutPort(0), system.getBlock("Resistor2").getOutPort(0), system));
 		system.addRelation(new SimulinkRelation(system.getBlock("Ref1").getInPort(0), system.getBlock("DCVoltageSource1").getOutPort(0), system));
 		system.addRelation(new SimulinkRelation(system.getBlock("Solver1").getInPort(0), system.getBlock("Ref1").getInPort(0), system));
 		
-		system.addRelation(new SimulinkRelation(lastSubsystem.getBlock("LConn1").getInPort(0), lastSubsystem.getBlock("Resistor1").getInPort(0), lastSubsystem));
-		system.addRelation(new SimulinkRelation(lastSubsystem.getBlock("Resistor1").getOutPort(0), lastSubsystem.getBlock("RConn1").getInPort(0), lastSubsystem));
+		system.addRelation(new SimulinkRelation(lastSubsystem.getInPort("LConn1").getInPort(0), lastSubsystem.getBlock("Resistor1").getInPort(0), lastSubsystem));
+		system.addRelation(new SimulinkRelation(lastSubsystem.getBlock("Resistor1").getOutPort(0), lastSubsystem.getOutPort("RConn1").getInPort(0), lastSubsystem));
 		system.addRelation(new SimulinkRelation(lastSubsystem.getBlock("Resistor1").getInPort(0), lastSubsystem.getBlock("Resistor2").getInPort(0), lastSubsystem));
 		system.addRelation(new SimulinkRelation(lastSubsystem.getBlock("Resistor1").getOutPort(0), lastSubsystem.getBlock("Resistor2").getOutPort(0), lastSubsystem));
 		

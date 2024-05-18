@@ -68,7 +68,7 @@ public class SimulinkSystem implements ISimulinkSystem {
                 relation.generateModel(matlab);
             }
             
-            //matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + name + "')");
+            matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + name + "')");
             
             // Save the model
             String modelFilePath = "" + name + ".slx";

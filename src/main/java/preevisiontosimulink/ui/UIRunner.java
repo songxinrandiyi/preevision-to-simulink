@@ -1,6 +1,7 @@
 package preevisiontosimulink.ui;
 
 import preevisiontosimulink.generator.ModelGenerator;
+import preevisiontosimulink.parser.VoltageDropModelGenerator;
 
 import javax.swing.*;
 import java.awt.*;
@@ -52,7 +53,11 @@ public class UIRunner {
             public void actionPerformed(ActionEvent e) {
                 String modelName = modelNameField.getText();
                 statusLabel.setText("Generating Simulink model...");
-                ModelGenerator.generateModel(modelName);
+                
+                VoltageDropModelGenerator generator = new VoltageDropModelGenerator(modelName, "BUMPER_FRONT_RIGHT_02132024_1527 1.kbl");
+                generator.generateModel();
+                
+                //ModelGenerator.generateModel(modelName);
                 statusLabel.setText("Simulink model generated.");
             }
         });
