@@ -7,6 +7,7 @@ import com.mathworks.engine.*;
 
 import preevisiontosimulink.library.*;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
+import preevisiontosimulink.proxy.port.SimulinkPort;
 import preevisiontosimulink.proxy.relation.ISimulinkRelation;
 
 
@@ -16,8 +17,10 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 	private ISimulinkSystem parent;
 	private String name;
 	private static int num = 1;
-	private List<LConnection> inPorts = new ArrayList<>();
-	private List<RConnection> outPorts = new ArrayList<>();
+	private List<LConnection> inConnections = new ArrayList<>();
+	private List<RConnection> outConnections = new ArrayList<>();
+	private List<Inport> inPorts = new ArrayList<>();
+	private List<Outport> outPorts = new ArrayList<>();
     private List<ISimulinkBlock> blockList = new ArrayList<>();
     private List<ISimulinkRelation> relationList = new ArrayList<>();
     private List<SimulinkSubsystem> subsystemList = new ArrayList<>();
@@ -36,17 +39,17 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		return parent;
 	}
 	
-	public LConnection addInPort(LConnection port) {
+	public Inport addInPort(Inport port) {
 		inPorts.add(port);
 		return port;
 	}
 	
-	public LConnection getInPort(int index) {
+	public Inport getInPort(int index) {
 		return inPorts.get(index);
 	}
 	
-	public LConnection getInPort(String name) {
-		for (LConnection port : inPorts) {
+	public Inport getInPort(String name) {
+		for (Inport port : inPorts) {
 			if (port.getName().equals(name)) {
 				return port;
 			}
@@ -63,23 +66,22 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 	    // If the port with the given name is not found, return -1 or handle it as needed
 	    return -1;  // or throw new IllegalArgumentException("Input port not found: " + name);
 	}
-
 	
-	public List<LConnection> getInPorts() {
+	public List<Inport> getInPorts() {
 		return inPorts;
 	}
 	
-	public RConnection addOutPort(RConnection port) {
+	public Outport addOutPort(Outport port) {
 		outPorts.add(port);
 		return port;
 	}
 	
-	public RConnection getOutPort(int index) {
+	public Outport getOutPort(int index) {
 		return outPorts.get(index);
 	}
 	
-	public RConnection getOutPort(String name) {
-		for (RConnection port : outPorts) {
+	public Outport getOutPort(String name) {
+		for (Outport port : outPorts) {
 			if (port.getName().equals(name)) {
 				return port;
 			}
@@ -94,24 +96,105 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 	        }
 	    }
 	    // If the port with the given name is not found, return -1 or handle it as needed
+	    return -1;  // or throw new IllegalArgumentException("Input port not found: " + name);
+	}
+	
+	public List<Outport> getOutPorts() {
+		return outPorts;
+	}
+	
+	public LConnection addInConnection(LConnection port) {
+		inConnections.add(port);
+		return port;
+	}
+	
+	public LConnection getInConnection(int index) {
+		return inConnections.get(index);
+	}
+	
+	public LConnection getInConnection(String name) {
+		for (LConnection port : inConnections) {
+			if (port.getName().equals(name)) {
+				return port;
+			}
+		}
+		return null;
+	}
+	
+	public int getInConnectionIndex(String name) {
+	    for (int i = 0; i < inConnections.size(); i++) {
+	        if (inConnections.get(i).getName().equals(name)) {
+	            return i+1;
+	        }
+	    }
+	    // If the port with the given name is not found, return -1 or handle it as needed
+	    return -1;  // or throw new IllegalArgumentException("Input port not found: " + name);
+	}
+
+	
+	public List<LConnection> getInConnections() {
+		return inConnections;
+	}
+	
+	public RConnection addOutConnection(RConnection port) {
+		outConnections.add(port);
+		return port;
+	}
+	
+	public RConnection getOutConnection(int index) {
+		return outConnections.get(index);
+	}
+	
+	public RConnection getOutConnection(String name) {
+		for (RConnection port : outConnections) {
+			if (port.getName().equals(name)) {
+				return port;
+			}
+		}
+		return null;
+	}
+	
+	public int getOutConnectionIndex(String name) {
+	    for (int i = 0; i < outConnections.size(); i++) {
+	        if (outConnections.get(i).getName().equals(name)) {
+	            return i+1;
+	        }
+	    }
+	    // If the port with the given name is not found, return -1 or handle it as needed
 	    return -1;  // or throw new IllegalArgumentException("Output port not found: " + name);
 	}
 	
-	public List<RConnection> getOutPorts() {
-		return outPorts;
+	public List<RConnection> getOutConnections() {
+		return outConnections;
 	}	
+	
+	public String getConnectionPath(String name) {
+	    for (int i = 0; i < inConnections.size(); i++) {
+	        if (inConnections.get(i).getName().equals(name)) {
+	        	int n = i+1;
+	            return "LConn" + n;
+	        }
+	    }
+	    for (int i = 0; i < outConnections.size(); i++) {
+	        if (outConnections.get(i).getName().equals(name)) {
+	        	int n = i+1;
+	            return "RConn" + n;
+	        }
+	    }
+	    return null;
+	}
 	
 	public String getPortPath(String name) {
 	    for (int i = 0; i < inPorts.size(); i++) {
 	        if (inPorts.get(i).getName().equals(name)) {
 	        	int n = i+1;
-	            return "LConn" + n;
+	            return "" + n;
 	        }
 	    }
 	    for (int i = 0; i < outPorts.size(); i++) {
 	        if (outPorts.get(i).getName().equals(name)) {
 	        	int n = i+1;
-	            return "RConn" + n;
+	            return "" + n;
 	        }
 	    }
 	    return null;
@@ -159,12 +242,22 @@ public class SimulinkSubsystem implements ISimulinkSystem {
             }
             
 			// Generate the Simulink model for each LConnection in the inPorts
-			for (LConnection port : inPorts) {
+			for (LConnection port : inConnections) {
 				port.generateModel(matlab);
 			}
 			
 			// Generate the Simulink model for each RConnection in the outPorts
-			for (RConnection port : outPorts) {
+			for (RConnection port : outConnections) {
+				port.generateModel(matlab);
+			}
+			
+			// Generate the Simulink model for each port in the inPorts
+			for (Inport port : inPorts) {
+				port.generateModel(matlab);
+			}
+			
+			// Generate the Simulink model for each port in the outPorts
+			for (Outport port : outPorts) {
 				port.generateModel(matlab);
 			}
             

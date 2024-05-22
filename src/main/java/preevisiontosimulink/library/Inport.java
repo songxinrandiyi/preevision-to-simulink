@@ -23,7 +23,7 @@ public class Inport extends SimulinkBlock {
 		num++;
 		
         // Initialize inputs and outputs if necessary
-        this.inPorts.add(new SimulinkPort("1", this)); 
+        this.outPorts.add(new SimulinkPort(1, this)); 
     }
 }
 

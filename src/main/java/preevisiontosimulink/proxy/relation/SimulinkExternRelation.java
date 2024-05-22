@@ -11,12 +11,14 @@ public class SimulinkExternRelation implements ISimulinkRelation {
     private ISimulinkSystem parent;
 	private String subsystemName;
 	private String portName;
+	private int direction;
 
-    public SimulinkExternRelation(ISimulinkPort outPort, String subsystemName, String portName, ISimulinkSystem parent) {
+    public SimulinkExternRelation(ISimulinkPort outPort, String subsystemName, String portName, ISimulinkSystem parent, int direction) {
         this.subsystemName = subsystemName;
 		this.portName = portName;
         this.outPort = outPort;
         this.parent = parent;
+        this.direction = direction;
     }
 
     @Override
@@ -37,13 +39,23 @@ public class SimulinkExternRelation implements ISimulinkRelation {
             parentPath = currentParent.getName() + "/" + parentPath;
             currentParent = currentParent.getParent();
         }
+        
+        if (direction == 0) {
+            try {
+                matlab.eval("add_line('" + parentPath + "', '" + sourceBlockPath + "', '" + destinationBlockPath + "', 'autorouting', 'on')");
 
-        try {
-            matlab.eval("add_line('" + parentPath + "', '" + sourceBlockPath + "', '" + destinationBlockPath + "', 'autorouting', 'on')");
+                System.out.println("Simulink relation generated: " + sourceBlockPath + " -> " + destinationBlockPath);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+		} else {
+            try {
+                matlab.eval("add_line('" + parentPath + "', '" + destinationBlockPath + "', '" + sourceBlockPath + "', 'autorouting', 'on')");
 
-            System.out.println("Simulink relation generated: " + sourceBlockPath + " -> " + destinationBlockPath);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+                System.out.println("Simulink relation generated: " + destinationBlockPath + " -> " + sourceBlockPath);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+		}
     }
 }

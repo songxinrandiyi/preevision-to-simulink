@@ -6,8 +6,8 @@ public class SimulinkPort implements ISimulinkPort {
     private String name;
     private SimulinkBlock parent;
 
-    public SimulinkPort(String name, SimulinkBlock parent) {
-        this.name = name;
+    public SimulinkPort(int index, SimulinkBlock parent) {
+        this.name = "" + index;
         this.parent = parent;
     }
 
@@ -16,6 +16,7 @@ public class SimulinkPort implements ISimulinkPort {
         return name;
     }
 
+	@Override
     public SimulinkBlock getParent() {
         return parent;
     }

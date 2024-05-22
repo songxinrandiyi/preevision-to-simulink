@@ -24,7 +24,7 @@ public class Scope extends SimulinkBlock {
     	}
 		num++;
         // Initialize inputs and outputs if necessary
-        this.inPorts.add(new SimulinkPort("1", this));
+        this.inPorts.add(new SimulinkPort(1, this));
 
         // Initialize parameters specific to the block
         this.parameters.add(new SimulinkParameter<Integer>("NumInputPorts", this));
