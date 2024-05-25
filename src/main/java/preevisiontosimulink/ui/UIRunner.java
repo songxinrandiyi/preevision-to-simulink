@@ -1,6 +1,6 @@
 package preevisiontosimulink.ui;
 
-import preevisiontosimulink.parser.VoltageDropModelGenerator;
+import preevisiontosimulink.parser.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,6 +14,7 @@ public class UIRunner {
     private static JTextField modelNameField;
     private static JLabel fileLabel;
     private static List<File> selectedFiles = new ArrayList<>();
+    private static JComboBox<String> generatorComboBox;
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Simulink Model Generator");
@@ -56,6 +57,15 @@ public class UIRunner {
         fileLabel.setBounds(250, 100, 200, 25);
         panel.add(fileLabel);
 
+        JLabel generatorLabel = new JLabel("Generator:");
+        generatorLabel.setBounds(50, 140, 80, 25);
+        panel.add(generatorLabel);
+
+        String[] generators = {"Wiring Harness From Excel", "Wiring Harness From KBL"};
+        generatorComboBox = new JComboBox<>(generators);
+        generatorComboBox.setBounds(140, 140, 300, 25);
+        panel.add(generatorComboBox);
+
         JButton runButton = new JButton("Generate");
         runButton.setBounds(200, 200, 100, 25);
         panel.add(runButton);
@@ -95,6 +105,12 @@ public class UIRunner {
                     return;
                 }
 
+                String selectedGenerator = (String) generatorComboBox.getSelectedItem();
+                if (selectedGenerator == null) {
+                    statusLabel.setText("No generator selected.");
+                    return;
+                }
+
                 statusLabel.setText("Generating Simulink model...");
 
                 List<String> filePaths = new ArrayList<>();
@@ -102,8 +118,19 @@ public class UIRunner {
                     filePaths.add(file.getAbsolutePath());
                 }
 
-                VoltageDropModelGenerator generator = new VoltageDropModelGenerator(modelName, filePaths);
-                generator.generateModel();
+                switch (selectedGenerator) {
+                    case "Wiring Harness From KBL":
+                        WiringHarnessFromKBL wiringHarnessFromKBL = new WiringHarnessFromKBL(modelName, filePaths);
+                        wiringHarnessFromKBL.generateModel();
+                        break;
+					case "Wiring Harness From Excel":
+						WiringHarnessFromExcel wiringHarnessFromExcel = new WiringHarnessFromExcel(modelName, filePaths);
+						wiringHarnessFromExcel.generateModel();
+						break;
+                    default:
+                        statusLabel.setText("Unknown generator selected.");
+                        return;
+                }
 
                 statusLabel.setText("Simulink model generated.");
             }

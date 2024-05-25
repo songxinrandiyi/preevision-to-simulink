@@ -16,7 +16,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VoltageDropModelGenerator {
+public class WiringHarnessFromKBL {
 	private SimulinkSystem system;
 	private String modelName;
 	private List<File> kblFiles = new ArrayList<>();
@@ -32,7 +32,7 @@ public class VoltageDropModelGenerator {
 	private List<ConnectorOccurrence> connectorOccurrences = new ArrayList<>();
 	private List<GeneralWireOccurrence> generalWireOccurrences = new ArrayList<>();
 	
-    public VoltageDropModelGenerator(String modelName, List<String> kblFilePaths) {
+    public WiringHarnessFromKBL(String modelName, List<String> kblFilePaths) {
         this.modelName = modelName;
         for (String path : kblFilePaths) {
             kblFiles.add(new File(path));
@@ -121,13 +121,16 @@ public class VoltageDropModelGenerator {
 			double crossSectionArea = 0;
 			name = segment.getLargeId();
 			system.addBlock(new Resistor(system, name));
-			length = segment.getPhysicalLength().getValueComponent();
-			if (segment.getCrossSectionAreaInformation() != null) {
-				crossSectionArea = segment.getCrossSectionAreaInformation().getArea().getValueComponent();
-			} else {
-				crossSectionArea = 50;
-			}			
-			resistance = calculateResistance(length, crossSectionArea);
+			if (segment.getPhysicalLength() != null) {
+				length = segment.getPhysicalLength().getValueComponent();
+				if (segment.getCrossSectionAreaInformation() != null) {
+					crossSectionArea = segment.getCrossSectionAreaInformation().getArea().getValueComponent();
+					resistance = calculateResistance(length, crossSectionArea);
+				} else {
+					resistance = 0.1E-4;
+				}
+			} 
+			
 			system.getBlock(name).setParameter("R", resistance);
 		}
 	}
@@ -136,20 +139,29 @@ public class VoltageDropModelGenerator {
     	for (Connection connection : connections) {
     		String name = connection.getId() + "_" + connection.getSignalName();
 	    	List <Extremity> extremities = connection.getExtremities();
-	    	Extremity firstExtremity = extremities.get(0);
-	    	Extremity secondExtremity = extremities.get(1);
+	    	Extremity startExtremity = null;
+	    	Extremity endExtremity = null;
+	    	for (Extremity extremity : extremities) {
+		    	if (extremity.getPositionOnWire() == 0.0) {
+		    		startExtremity = extremity;	
+		    	} else {
+			    	endExtremity = extremity;
+		    	}
+	    	}
 	    	
-	    	ConnectorOccurrence firstConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences, firstExtremity.getContactPoint());
-	    	ConnectorOccurrence secondConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences, secondExtremity.getContactPoint());
+	    	if (startExtremity != null) {
+	    		ConnectorOccurrence startConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences, startExtremity.getContactPoint());
+	    		ConnectorHousing startConnectorHousing = findConnectorHousing(connectorHousings, startConnectorOccurrence.getPart());
+	    		SimulinkSubsystem startSubsystem = system.getSubsystem(startConnectorHousing.getDescription());
+	    		system.addRelation(new SimulinkExternRelation(system.getBlock(name).getInPort(0), startConnectorHousing.getDescription(), startSubsystem.getConnectionPath(startConnectorOccurrence.getLargeId()), system, 0));
+	    	}
 	    	
-	    	ConnectorHousing firstConnectorHousing = findConnectorHousing(connectorHousings, firstConnectorOccurrence.getPart());
-	    	ConnectorHousing secondConnectorHousing = findConnectorHousing(connectorHousings, secondConnectorOccurrence.getPart());
-	    	
-	    	SimulinkSubsystem firstSubsystem = system.getSubsystem(firstConnectorHousing.getDescription());
-	    	SimulinkSubsystem secondSubsystem = system.getSubsystem(secondConnectorHousing.getDescription());	    	
-	    	
-			system.addRelation(new SimulinkExternRelation(system.getBlock(name).getInPort(0), firstConnectorHousing.getDescription(), firstSubsystem.getConnectionPath(firstConnectorOccurrence.getLargeId()), system, 0));
-			system.addRelation(new SimulinkExternRelation(system.getBlock(name).getOutPort(0), secondConnectorHousing.getDescription(), secondSubsystem.getConnectionPath(secondConnectorOccurrence.getLargeId()), system, 0));
+	    	if (endExtremity != null) {		    			    	
+		    	ConnectorOccurrence endConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences, endExtremity.getContactPoint());		    			    	
+		    	ConnectorHousing endConnectorHousing = findConnectorHousing(connectorHousings, endConnectorOccurrence.getPart());		    			    	
+		    	SimulinkSubsystem endSubsystem = system.getSubsystem(endConnectorHousing.getDescription());	    			    					
+				system.addRelation(new SimulinkExternRelation(system.getBlock(name).getOutPort(0), endConnectorHousing.getDescription(), endSubsystem.getConnectionPath(endConnectorOccurrence.getLargeId()), system, 0));
+	    	}
     	}
     	
     	for (Segment segment : segments) {
@@ -252,7 +264,7 @@ public class VoltageDropModelGenerator {
         return null; // If no corresponding CartesianPoint is found
     }
     
-    public static double calculateResistance(double length, double crossSectionalArea) {
+    public double calculateResistance(double length, double crossSectionalArea) {
         // Convert cross-sectional area from mm² to m² (1 mm² = 1e-6 m²)
         double crossSectionalAreaM2 = crossSectionalArea * 1e-6;
 

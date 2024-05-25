@@ -25,5 +25,9 @@ lib/
 
 *.pdf
 
+*.autosave
+
+*.jar
+
 
 

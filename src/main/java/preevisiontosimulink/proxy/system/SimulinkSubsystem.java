@@ -1,6 +1,8 @@
 package preevisiontosimulink.proxy.system;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.mathworks.engine.*;
@@ -319,5 +321,38 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		}
 		return null;
 	}
+	
+    private int extractNumber(String name) {
+        String[] parts = name.split("_");
+        return Integer.parseInt(parts[0]);
+    }
+
+    public void reorderConnections() {
+        // Reorder inConnections
+        Collections.sort(inConnections, new Comparator<LConnection>() {
+            @Override
+            public int compare(LConnection c1, LConnection c2) {
+                return extractNumber(c1.getName()) - extractNumber(c2.getName());
+            }
+        });
+
+        // Reorder outConnections
+        Collections.sort(outConnections, new Comparator<RConnection>() {
+            @Override
+            public int compare(RConnection c1, RConnection c2) {
+                return extractNumber(c1.getName()) - extractNumber(c2.getName());
+            }
+        });
+    }
+    
+    public void reorderConnectionsRecursively(SimulinkSubsystem subsystem) {
+        // Reorder connections for the current subsystem
+        subsystem.reorderConnections();
+
+        // Reorder connections for each child subsystem
+        for (SimulinkSubsystem childSubsystem : subsystem.getSubsystemList()) {
+            reorderConnectionsRecursively(childSubsystem);
+        }
+    }
 }
 
