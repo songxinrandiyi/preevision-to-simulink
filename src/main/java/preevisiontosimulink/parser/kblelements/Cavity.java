@@ -10,8 +10,19 @@ public class Cavity {
 	
     @XmlElement(name = "Cavity_number")
     private int cavityNumber;
+    
+    @XmlElement(name = "Part")
+    private String part;
 
-    // Getter and Setter for Cavity Number
+    public String getPart() {
+		return part;
+	}
+
+	public void setPart(String part) {
+		this.part = part;
+	}
+
+	// Getter and Setter for Cavity Number
     public int getCavityNumber() {
         return cavityNumber;
     }

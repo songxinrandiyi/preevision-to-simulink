@@ -77,7 +77,7 @@ public class WiringHarnessFromExcel {
                 SimulinkSubsystem subsystem1 = system.getSubsystem(component1Name);
                 if (subsystem1.getInConnection(pin1Name) == null) {
                     subsystem1.addInConnection(new LConnection(subsystem1, pin1Name));
-					subsystem1.reorderConnections();
+					subsystem1.reorderConnectionsForExcel();
                 }
                 
                 if (system.getSubsystem(component2Name) == null) {
@@ -86,7 +86,7 @@ public class WiringHarnessFromExcel {
                 SimulinkSubsystem subsystem2 = system.getSubsystem(component2Name);
                 if (subsystem2.getInConnection(pin2Name) == null) {
                     subsystem2.addInConnection(new LConnection(subsystem2, pin2Name));
-                    subsystem2.reorderConnections();
+                    subsystem2.reorderConnectionsForExcel();
                 }                         
             }
         }
@@ -118,8 +118,7 @@ public class WiringHarnessFromExcel {
                 
 				String name = component1Name + "  " + pin1Name + "  " + component2Name + "  " + pin2Name;
 				system.addBlock(new Resistor(system, name));
-				double resistance = calculateResistance(-convertStringToDouble(row.getCell(21).getStringCellValue()), 
-						convertStringToDouble(row.getCell(20).getStringCellValue()));
+				double resistance = calculateResistance(row.getCell(21), row.getCell(20));
 				system.getBlock(name).setParameter("R", resistance);
 				String pin1Path = system.getSubsystem(component1Name).getConnectionPath(pin1Name);
 				system.addRelation(new SimulinkExternRelation(system.getBlock(name).getInPort(0), component1Name, pin1Path, system, 0));
@@ -199,15 +198,18 @@ public class WiringHarnessFromExcel {
         }
     }
     
-	private double calculateResistance(double length, double crossSectionalArea) {
+    public double calculateResistance(double length, double crossSectionalArea) {
         // Convert cross-sectional area from mm² to m² (1 mm² = 1e-6 m²)
         double crossSectionalAreaM2 = crossSectionalArea * 1e-6;
 
+        // Convert length from mm to meters (1 mm = 1e-3 m)
+        double lengthM = length * 1e-3;
+
         // Calculate and return resistance using the formula R = ρ * (L / A)
-        return 1.77e-8 * (length / crossSectionalAreaM2);
+        return 1.77e-8 * (lengthM / crossSectionalAreaM2);
     }
     
-    private static double extractMiddleDouble(String str) {
+    private double extractMiddleDouble(String str) {
         // Split the string based on underscores
         String[] parts = str.split("_");
         
@@ -225,6 +227,31 @@ public class WiringHarnessFromExcel {
         } catch (NumberFormatException e) {
             throw new NumberFormatException("Invalid format for a double in the middle part: " + middlePart);
         }
+    }
+    
+    private double calculateResistance(Cell cellLength, Cell cellCrossSectionalArea) {
+        double length;
+        double crossSectionalArea;
+
+        if (cellLength.getCellType() == CellType.NUMERIC) {
+            length = cellLength.getNumericCellValue();
+        } else if (cellLength.getCellType() == CellType.STRING) {
+            length = convertStringToDouble(cellLength.getStringCellValue());
+        } else {
+            // Handle other cell types or invalid values appropriately
+            throw new IllegalArgumentException("Invalid cell type for length");
+        }
+
+        if (cellCrossSectionalArea.getCellType() == CellType.NUMERIC) {
+            crossSectionalArea = cellCrossSectionalArea.getNumericCellValue();
+        } else if (cellCrossSectionalArea.getCellType() == CellType.STRING) {
+            crossSectionalArea = convertStringToDouble(cellCrossSectionalArea.getStringCellValue());
+        } else {
+            // Handle other cell types or invalid values appropriately
+            throw new IllegalArgumentException("Invalid cell type for cross-sectional area");
+        }
+
+        return calculateResistance(length, crossSectionalArea);
     }
 }
 

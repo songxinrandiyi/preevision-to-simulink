@@ -61,7 +61,7 @@ public class UIRunner {
         generatorLabel.setBounds(50, 140, 80, 25);
         panel.add(generatorLabel);
 
-        String[] generators = {"Wiring Harness From Excel", "Wiring Harness From KBL"};
+        String[] generators = {"Wiring Harness From KBL", "Wiring Harness From Excel"};
         generatorComboBox = new JComboBox<>(generators);
         generatorComboBox.setBounds(140, 140, 300, 25);
         panel.add(generatorComboBox);

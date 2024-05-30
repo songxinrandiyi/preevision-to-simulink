@@ -327,7 +327,7 @@ public class SimulinkSubsystem implements ISimulinkSystem {
         return Integer.parseInt(parts[0]);
     }
 
-    public void reorderConnections() {
+    public void reorderConnectionsForExcel() {
         // Reorder inConnections
         Collections.sort(inConnections, new Comparator<LConnection>() {
             @Override
@@ -345,13 +345,50 @@ public class SimulinkSubsystem implements ISimulinkSystem {
         });
     }
     
-    public void reorderConnectionsRecursively(SimulinkSubsystem subsystem) {
+    public void reorderConnectionsRecursivelyForExcel(SimulinkSubsystem subsystem) {
         // Reorder connections for the current subsystem
-        subsystem.reorderConnections();
+        subsystem.reorderConnectionsForExcel();
 
         // Reorder connections for each child subsystem
         for (SimulinkSubsystem childSubsystem : subsystem.getSubsystemList()) {
-            reorderConnectionsRecursively(childSubsystem);
+            reorderConnectionsRecursivelyForExcel(childSubsystem);
+        }
+    }
+    
+    public void reorderConnectionsForKBL() {
+        // Reorder inConnections
+        Collections.sort(inConnections, new Comparator<LConnection>() {
+            @Override
+            public int compare(LConnection c1, LConnection c2) {
+                return convertStringToInt(c1.getName()) - convertStringToInt(c2.getName());
+            }
+        });
+
+        // Reorder outConnections
+        Collections.sort(outConnections, new Comparator<RConnection>() {
+            @Override
+            public int compare(RConnection c1, RConnection c2) {
+                return convertStringToInt(c1.getName()) - convertStringToInt(c2.getName());
+            }
+        });
+    }
+    
+	public void reorderConnectionsRecursivelyForKBL(SimulinkSubsystem subsystem) {
+		// Reorder connections for the current subsystem
+		subsystem.reorderConnectionsForKBL();
+
+		// Reorder connections for each child subsystem
+		for (SimulinkSubsystem childSubsystem : subsystem.getSubsystemList()) {
+			reorderConnectionsRecursivelyForKBL(childSubsystem);
+		}
+	}
+    
+    private int convertStringToInt(String str) {
+        try {
+            return Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid string format for an integer: " + str);
+            return 0; // Return a default value, e.g., 0
         }
     }
 }

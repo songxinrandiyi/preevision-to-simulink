@@ -8,6 +8,8 @@ target/
 
 lib/
 
+kbl/
+
 # Ignore files with .slx extension
 *.slx
 
