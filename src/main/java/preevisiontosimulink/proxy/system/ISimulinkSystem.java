@@ -16,5 +16,6 @@ public interface ISimulinkSystem {
 	List<SimulinkSubsystem> getSubsystemList();
 	SimulinkSubsystem getSubsystem(String name);
     String getName();
+    ISimulinkRelation getRelation(String name);
 }
 

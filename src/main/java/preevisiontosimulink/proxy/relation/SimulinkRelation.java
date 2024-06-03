@@ -6,11 +6,13 @@ import preevisiontosimulink.proxy.port.ISimulinkPort;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
 public class SimulinkRelation implements ISimulinkRelation {
+	private String name;
     private ISimulinkPort inPort;
     private ISimulinkPort outPort;
     private ISimulinkSystem parent;
 
     public SimulinkRelation(ISimulinkPort outPort, ISimulinkPort inPort, ISimulinkSystem parent) {
+    	this.name = outPort.getParent().getName() + "_" + inPort.getParent().getName();
         this.inPort = inPort;
         this.outPort = outPort;
         this.parent = parent;
@@ -42,4 +44,9 @@ public class SimulinkRelation implements ISimulinkRelation {
             e.printStackTrace();
         }
     }
+
+	@Override
+	public String getName() {
+		return name;
+	}
 }

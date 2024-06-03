@@ -42,7 +42,6 @@ public class WiringHarnessFromKBL {
 	
     public void generateModel() {
         system = new SimulinkSystem(modelName);
-        SimulinkSubsystem lastSubsystem;
         
         generateBlocksAndConnections();	
         //generateConnections();
@@ -83,16 +82,15 @@ public class WiringHarnessFromKBL {
 			
 			if (system.getSubsystem(connectorOccurrence.getLargeId()) == null) {
 				system.addSubsystem(new SimulinkSubsystem(system, connectorOccurrence.getLargeId()));
-			}
-			
-			List<Cavity> cavities = connectorOccurrence.getSlots().getCavities();
-			for (Cavity cavity : cavities) {
-				Integer cavityNumber = getCavityNumberById(connectorHousing, cavity.getPart());
-				
-				SimulinkSubsystem subsystem = system.getSubsystem(connectorOccurrence.getLargeId());
-				subsystem.addInConnection(new LConnection(subsystem, cavityNumber.toString()));
-				subsystem.addBlock(new Resistor(subsystem, cavityNumber.toString() + "_R"));
-				subsystem.getBlock(cavityNumber.toString() + "_R").setParameter("R", 5);
+				List<Cavity> cavities = connectorOccurrence.getSlots().getCavities();
+				for (Cavity cavity : cavities) {
+					Integer cavityNumber = getCavityNumberById(connectorHousing, cavity.getPart());
+					
+					SimulinkSubsystem subsystem = system.getSubsystem(connectorOccurrence.getLargeId());
+					subsystem.addInConnection(new LConnection(subsystem, cavityNumber.toString()));
+					subsystem.addBlock(new Resistor(subsystem, cavityNumber.toString() + "_R"));
+					subsystem.getBlock(cavityNumber.toString() + "_R").setParameter("R", 5);
+				}
 			}
 		}
 		
@@ -106,22 +104,27 @@ public class WiringHarnessFromKBL {
 					subsystem.addRelation(new SimulinkRelation(inPort.getInPort(0), subsystem.getBlock(inPort.getName() + "_R").getInPort(0), subsystem));
 				}
 				if (inPorts.size() > 1) {
-					for (int i = 0; i < inPorts.size() - 1; i++) {
-						LConnection endPort = inPorts.get(inPorts.size() - 1);
+					LConnection endPort = inPorts.get(inPorts.size() - 1);
+					for (int i = 0; i < inPorts.size() - 1; i++) {						
 						LConnection startPort = inPorts.get(i);
 						ISimulinkBlock endResistor = subsystem.getBlock(endPort.getName() + "_R");
 						ISimulinkBlock startResistor = subsystem.getBlock(startPort.getName() + "_R");
 						subsystem.addRelation(new SimulinkRelation(endResistor.getOutPort(0), startResistor.getOutPort(0), subsystem));
 					}
+				} else {
+					LConnection startPort = inPorts.get(0);
+					ISimulinkBlock startResistor = subsystem.getBlock(startPort.getName() + "_R");
+					subsystem.addBlock(new ElectricalReference(subsystem, startPort.getName() + "_E"));
+					subsystem.addRelation(new SimulinkRelation(startResistor.getOutPort(0), subsystem.getBlock(startPort.getName() + "_E").getInPort(0), subsystem));
 				}
 			}
 		}
 				
 		for (Connection connection : connections) {
 			String name;
-			double resistance = 0;
-			double length = 0;
-			double crossSectionArea = 0;
+			Double resistance;
+			Double length;
+			Double crossSectionArea;
 			name = connection.getId() + "_" + connection.getSignalName();
 						
 	    	List <Extremity> extremities = connection.getExtremities();
@@ -140,34 +143,44 @@ public class WiringHarnessFromKBL {
 		    	}
 	    	}
 	    	
-	    	if (startExtremity != null || endExtremity != null) {		    	
-				system.addBlock(new Resistor(system, name));
+	    	if (startExtremity != null || endExtremity != null) {		
+	    		if (system.getBlock(name) == null) {	
+	    			system.addBlock(new Resistor(system, name));					
+	    		}
+	    		
 				GeneralWireOccurrence generalWireOccurrence = findGeneralWireOccurrence(generalWireOccurrences, connection.getWire());
 				if (generalWireOccurrence != null) {
 					length = generalWireOccurrence.getLengthInformation().getLengthValue().getValueComponent();
 					GeneralWire generalWire = findGeneralWire(generalWires, generalWireOccurrence.getPart());
-					if (generalWire != null) {
+					if (generalWire != null && length != null) {
 						crossSectionArea = generalWire.getCrossSectionArea().getValueComponent();
-						resistance = calculateResistance(length, crossSectionArea);
-					}
-				} else {
-					resistance = 0.1;
+						resistance = calculateResistance(length, crossSectionArea);							
+						system.getBlock(name).setParameter("R", resistance);
+					} else {
+						resistance = 0.1;
+						system.getBlock(name).setParameter("R", resistance);
+					}					
 				}
-				system.getBlock(name).setParameter("R", resistance);
-				
+			
 				if (startExtremity != null) {
 		    		startConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences, startExtremity.getContactPoint());
 		    		ConnectorHousing startConnectorHousing = findConnectorHousing(connectorHousings, startConnectorOccurrence.getPart());
-		    		Integer startPin = findPinNumWithContactPointId(startConnectorOccurrence, startConnectorHousing, startExtremity.getContactPoint());
+		    		Integer startPin = findPinNumWithContactPointId(startConnectorOccurrence, startConnectorHousing, startExtremity.getContactPoint());		    				    		
 		    		SimulinkSubsystem startSubsystem = system.getSubsystem(startConnectorOccurrence.getLargeId());
-		    		system.addRelation(new SimulinkExternRelation(system.getBlock(name).getInPort(0), startConnectorOccurrence.getLargeId(), startSubsystem.getConnectionPath(startPin.toString()), system, 0));
+		    		String nameStartConnection = name + "_" + startConnectorOccurrence.getLargeId() + "_" + startSubsystem.getConnectionPath(startPin.toString());
+		    		if (system.getRelation(nameStartConnection) == null) {
+		    			system.addRelation(new SimulinkExternRelation(system.getBlock(name).getInPort(0), startConnectorOccurrence.getLargeId(), startSubsystem.getConnectionPath(startPin.toString()), system, 0));
+		    		}		    		
 				}
 				if (endExtremity != null) {
 			    	endConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences, endExtremity.getContactPoint());		    			    	
 			    	ConnectorHousing endConnectorHousing = findConnectorHousing(connectorHousings, endConnectorOccurrence.getPart());		    			    	
 			    	Integer endPin = findPinNumWithContactPointId(endConnectorOccurrence, endConnectorHousing, endExtremity.getContactPoint());
 			    	SimulinkSubsystem endSubsystem = system.getSubsystem(endConnectorOccurrence.getLargeId());
+			    	String nameEndConnection = name + "_" + endConnectorOccurrence.getLargeId() + "_" + endSubsystem.getConnectionPath(endPin.toString());
+			    	if (system.getRelation(nameEndConnection) == null) {
 			    	system.addRelation(new SimulinkExternRelation(system.getBlock(name).getOutPort(0), endConnectorOccurrence.getLargeId(), endSubsystem.getConnectionPath(endPin.toString()), system, 0));
+			    	}
 				}
 	    	}
 		}
@@ -206,25 +219,6 @@ public class WiringHarnessFromKBL {
 				ConnectorHousing secondConnectorHousing = findConnectorHousing(connectorHousings, secondConnectorOccurrence.getPart());
 				SimulinkSubsystem secondSubsystem = system.getSubsystem(secondConnectorHousing.getDescription());
 				system.addRelation(new SimulinkExternRelation(system.getBlock(name).getOutPort(0), secondConnectorHousing.getDescription(), secondSubsystem.getConnectionPath(secondConnectorOccurrence.getLargeId()), system, 0));
-			}
-		}
-		
-		List <SimulinkSubsystem> subsystems = system.getSubsystemList();
-		for (SimulinkSubsystem subsystem : subsystems) {
-			List <LConnection> inPorts = subsystem.getInConnections();
-			if (inPorts != null) {
-				for (LConnection inPort : inPorts) {
-					subsystem.addRelation(new SimulinkRelation(inPort.getInPort(0), subsystem.getBlock(inPort.getName() + "_R").getInPort(0), subsystem));
-				}
-				if (inPorts.size() > 1) {
-					for (int i = 0; i < inPorts.size() - 1; i++) {
-						LConnection endPort = inPorts.get(inPorts.size() - 1);
-						LConnection startPort = inPorts.get(i);
-						ISimulinkBlock endResistor = subsystem.getBlock(endPort.getName() + "_R");
-						ISimulinkBlock startResistor = subsystem.getBlock(startPort.getName() + "_R");
-						subsystem.addRelation(new SimulinkRelation(endResistor.getOutPort(0), startResistor.getOutPort(0), subsystem));
-					}
-				}
 			}
 		}
 		*/

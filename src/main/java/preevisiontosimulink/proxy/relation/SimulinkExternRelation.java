@@ -9,6 +9,7 @@ import preevisiontosimulink.proxy.system.SimulinkSubsystem;
 public class SimulinkExternRelation implements ISimulinkRelation {
     private ISimulinkPort outPort;
     private ISimulinkSystem parent;
+    private String name;
 	private String subsystemName;
 	private String portName;
 	private int direction;
@@ -16,6 +17,7 @@ public class SimulinkExternRelation implements ISimulinkRelation {
     public SimulinkExternRelation(ISimulinkPort outPort, String subsystemName, String portName, ISimulinkSystem parent, int direction) {
         this.subsystemName = subsystemName;
 		this.portName = portName;
+		this.name = outPort.getParent().getName() + "_" + subsystemName + "_" + portName;
         this.outPort = outPort;
         this.parent = parent;
         this.direction = direction;
@@ -58,4 +60,9 @@ public class SimulinkExternRelation implements ISimulinkRelation {
             }
 		}
     }
+
+	@Override
+	public String getName() {
+		return name;
+	}
 }

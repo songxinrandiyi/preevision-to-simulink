@@ -118,5 +118,15 @@ public class SimulinkSystem implements ISimulinkSystem {
 		}
 		return null;
 	}
+	
+	@Override
+	public ISimulinkRelation getRelation(String name) {
+		for (ISimulinkRelation relation : relationList) {
+			if (relation.getName().equals(name)) {
+				return relation;
+			}
+		}
+		return null;
+	}
 }
 

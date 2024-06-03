@@ -322,6 +322,16 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		return null;
 	}
 	
+	@Override
+	public ISimulinkRelation getRelation(String name) {
+		for (ISimulinkRelation relation : relationList) {
+			if (relation.getName().equals(name)) {
+				return relation;
+			}
+		}
+		return null;
+	}
+	
     private int extractNumber(String name) {
         String[] parts = name.split("_");
         return Integer.parseInt(parts[0]);
