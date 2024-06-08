@@ -2,6 +2,8 @@ package preevisiontosimulink.proxy.system;
 
 import java.util.List;
 
+import preevisiontosimulink.library.DCCurrentSource;
+import preevisiontosimulink.library.Resistor;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
 import preevisiontosimulink.proxy.relation.ISimulinkRelation;
 
@@ -17,5 +19,7 @@ public interface ISimulinkSystem {
 	SimulinkSubsystem getSubsystem(String name);
     String getName();
     ISimulinkRelation getRelation(String name);
+    List<Resistor> getAllResistorBlocks();
+    List<DCCurrentSource> getAllCurrentSourceBlocks();
 }
 

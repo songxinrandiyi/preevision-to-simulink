@@ -1,5 +1,7 @@
 package preevisiontosimulink.parser.kblelements;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.*;
 
 @XmlRootElement(name = "General_wire_occurrence")
@@ -8,17 +10,50 @@ public class GeneralWireOccurrence {
 
     @XmlAttribute(name = "id")
     private String id;
+    
+    @XmlAttribute(name = "type", namespace = "http://www.w3.org/2001/XMLSchema-instance")
+    private String type;
 
     @XmlElement(name = "Part")
     private String part;
 
     @XmlElement(name = "Length_information")
-    private LengthInformation lengthInformation;
+    private List<LengthInformation> lengthInformation;
+    
+    @XmlElement(name = "Core_occurrence")
+    private List<CoreOccurrence> coreOccurrences;
 
-    @XmlElement(name = "Wire_number")
-    private int wireNumber;
+    public List<CoreOccurrence> getCoreOccurrences() {
+		return coreOccurrences;
+	}
 
-    // Getters and setters
+	public void setCoreOccurrences(List<CoreOccurrence> coreOccurrences) {
+		this.coreOccurrences = coreOccurrences;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	@XmlElement(name = "Wire_number")
+    private Integer wireNumber;
+	
+    @XmlElement(name = "Special_wire_id")
+    private String specialWireId;
+
+    public String getSpecialWireId() {
+		return specialWireId;
+	}
+
+	public void setSpecialWireId(String specialWireId) {
+		this.specialWireId = specialWireId;
+	}
+
+	// Getters and setters
     public String getId() {
         return id;
     }
@@ -35,19 +70,19 @@ public class GeneralWireOccurrence {
         this.part = part;
     }
 
-    public LengthInformation getLengthInformation() {
+    public List<LengthInformation> getLengthInformation() {
         return lengthInformation;
     }
 
-    public void setLengthInformation(LengthInformation lengthInformation) {
+    public void setLengthInformation(List<LengthInformation> lengthInformation) {
         this.lengthInformation = lengthInformation;
     }
 
-    public int getWireNumber() {
+    public Integer getWireNumber() {
         return wireNumber;
     }
 
-    public void setWireNumber(int wireNumber) {
+    public void setWireNumber(Integer wireNumber) {
         this.wireNumber = wireNumber;
     }
 }

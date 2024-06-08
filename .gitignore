@@ -6,12 +6,16 @@
 # Maven target directory
 target/
 
+slprj/
+
 lib/
 
 kbl/
 
 # Ignore files with .slx extension
 *.slx
+
+*.slxc
 
 *.kbl
 

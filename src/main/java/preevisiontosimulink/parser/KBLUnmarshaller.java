@@ -12,7 +12,7 @@ public class KBLUnmarshaller {
     public static void main(String[] args) {
         try {
         	//File file = new File("BODY_CTRL_MDL_GEN_20240430 1.arxml");
-            File file = new File("BUMPER_FRONT_RIGHT_02132024_1527 1.kbl");
+            File file = new File("kbl/FRONT_BUMPER_RIGHT_20240529_LD.kbl");
             JAXBContext jaxbContext = JAXBContext.newInstance(KBLContainer.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
@@ -57,9 +57,19 @@ public class KBLUnmarshaller {
             List<GeneralWireOccurrence> generalWireOccurrences = harness.getGeneralWireOccurrences();
             for (GeneralWireOccurrence generalWireOccurrence : generalWireOccurrences) {
 				System.out.println("GeneralWireOccurrence ID: " + generalWireOccurrence.getId());
+				System.out.println("Type: " + generalWireOccurrence.getType());
 				System.out.println("Part ID: " + generalWireOccurrence.getPart());
-				System.out.println("Wire Number: " + generalWireOccurrence.getWireNumber());
-				System.out.println("Length Value: " + generalWireOccurrence.getLengthInformation().getLengthValue().getValueComponent());
+				if ("kbl:Special_wire_occurrence".equals(generalWireOccurrence.getType())) {
+					System.out.println("Special Wire Id: " + generalWireOccurrence.getSpecialWireId());
+					System.out.println("Number of Cores: " + generalWireOccurrence.getCoreOccurrences().size());
+					for (CoreOccurrence coreOccurrence : generalWireOccurrence.getCoreOccurrences()) {
+						System.out.println("Length of Core: " + coreOccurrence.getLengthInformation().get(0).getLengthValue().getValueComponent());
+					}
+				}
+				if ("kbl:Wire_occurrence".equals(generalWireOccurrence.getType())) {
+					System.out.println("Wire Number: " + generalWireOccurrence.getWireNumber());
+					System.out.println("Length Value: " + generalWireOccurrence.getLengthInformation().get(0).getLengthValue().getValueComponent());
+				}
 				
 				System.out.println(); // Adding a newline for readability
 			}			          

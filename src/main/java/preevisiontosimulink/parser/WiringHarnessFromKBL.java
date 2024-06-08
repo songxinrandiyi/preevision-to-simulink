@@ -19,7 +19,8 @@ import java.util.List;
 public class WiringHarnessFromKBL {
 	private SimulinkSystem system;
 	private String modelName;
-	private List<File> kblFiles = new ArrayList<>();
+    private List<File> kblFiles = new ArrayList<>();
+    private List<File> xlsxFiles = new ArrayList<>();
 	
 	private KBLContainer kblContainer;
 	private List<ConnectorHousing> connectorHousings = new ArrayList<>();
@@ -32,10 +33,15 @@ public class WiringHarnessFromKBL {
 	private List<ConnectorOccurrence> connectorOccurrences = new ArrayList<>();
 	private List<GeneralWireOccurrence> generalWireOccurrences = new ArrayList<>();
 		
-    public WiringHarnessFromKBL(String modelName, List<String> kblFilePaths) {
+    public WiringHarnessFromKBL(String modelName, List<String> paths) {
         this.modelName = modelName;
-        for (String path : kblFilePaths) {
-            kblFiles.add(new File(path));
+        for (String path : paths) {
+            File file = new File(path);
+            if (path.endsWith(".kbl")) {
+                kblFiles.add(file);
+            } else if (path.endsWith(".xlsx")) {
+                xlsxFiles.add(file);
+            }
         }
         init();
     }
@@ -44,7 +50,6 @@ public class WiringHarnessFromKBL {
         system = new SimulinkSystem(modelName);
         
         generateBlocksAndConnections();	
-        //generateConnections();
         
         system.generateModel();
     }
@@ -88,34 +93,26 @@ public class WiringHarnessFromKBL {
 					
 					SimulinkSubsystem subsystem = system.getSubsystem(connectorOccurrence.getLargeId());
 					subsystem.addInConnection(new LConnection(subsystem, cavityNumber.toString()));
-					subsystem.addBlock(new Resistor(subsystem, cavityNumber.toString() + "_R"));
-					subsystem.getBlock(cavityNumber.toString() + "_R").setParameter("R", 5);
 				}
 			}
 		}
 		
+		
 		List <SimulinkSubsystem> subsystems = system.getSubsystemList();
 		for (SimulinkSubsystem subsystem : subsystems) {
 			subsystem.reorderConnectionsForKBL();
+			subsystem.addBlock(new ElectricalReference(subsystem, subsystem.getName() + "_E"));
 			
 			List <LConnection> inPorts = subsystem.getInConnections();
 			if (inPorts != null) {
 				for (LConnection inPort : inPorts) {
-					subsystem.addRelation(new SimulinkRelation(inPort.getInPort(0), subsystem.getBlock(inPort.getName() + "_R").getInPort(0), subsystem));
-				}
-				if (inPorts.size() > 1) {
-					LConnection endPort = inPorts.get(inPorts.size() - 1);
-					for (int i = 0; i < inPorts.size() - 1; i++) {						
-						LConnection startPort = inPorts.get(i);
-						ISimulinkBlock endResistor = subsystem.getBlock(endPort.getName() + "_R");
-						ISimulinkBlock startResistor = subsystem.getBlock(startPort.getName() + "_R");
-						subsystem.addRelation(new SimulinkRelation(endResistor.getOutPort(0), startResistor.getOutPort(0), subsystem));
-					}
-				} else {
-					LConnection startPort = inPorts.get(0);
-					ISimulinkBlock startResistor = subsystem.getBlock(startPort.getName() + "_R");
-					subsystem.addBlock(new ElectricalReference(subsystem, startPort.getName() + "_E"));
-					subsystem.addRelation(new SimulinkRelation(startResistor.getOutPort(0), subsystem.getBlock(startPort.getName() + "_E").getInPort(0), subsystem));
+					subsystem.addBlock(new CurrentSensor(subsystem, inPort.getName() + "_I"));
+					subsystem.addBlock(new PSSimulinkConverter(subsystem, inPort.getName() + "_PS"));
+					subsystem.addBlock(new Scope(subsystem, inPort.getName() + "_Scope"));
+					subsystem.addRelation(new SimulinkRelation(inPort.getInPort(0), subsystem.getBlock(inPort.getName() + "_I").getInPort(0), subsystem));
+					subsystem.addRelation(new SimulinkRelation(subsystem.getBlock(inPort.getName() + "_I").getOutPort(1), subsystem.getBlock(subsystem.getName() + "_E").getInPort(0), subsystem));	
+					subsystem.addRelation(new SimulinkRelation(subsystem.getBlock(inPort.getName() + "_I").getOutPort(0), subsystem.getBlock(inPort.getName() + "_PS").getInPort(0), subsystem));		
+					subsystem.addRelation(new SimulinkRelation(subsystem.getBlock(inPort.getName() + "_PS").getOutPort(0), subsystem.getBlock(inPort.getName() + "_Scope").getInPort(0), subsystem));			
 				}
 			}
 		}
@@ -125,7 +122,7 @@ public class WiringHarnessFromKBL {
 			Double resistance;
 			Double length;
 			Double crossSectionArea;
-			name = connection.getId() + "_" + connection.getSignalName();
+			name = connection.getSignalName();
 						
 	    	List <Extremity> extremities = connection.getExtremities();
 	    	Extremity startExtremity = null;
@@ -143,35 +140,47 @@ public class WiringHarnessFromKBL {
 		    	}
 	    	}
 	    	
-	    	if (startExtremity != null || endExtremity != null) {		
-	    		if (system.getBlock(name) == null) {	
-	    			system.addBlock(new Resistor(system, name));					
-	    		}
-	    		
+	    	if (startExtremity != null && endExtremity != null) {		    		
 				GeneralWireOccurrence generalWireOccurrence = findGeneralWireOccurrence(generalWireOccurrences, connection.getWire());
 				if (generalWireOccurrence != null) {
-					length = generalWireOccurrence.getLengthInformation().getLengthValue().getValueComponent();
+					length = generalWireOccurrence.getLengthInformation().get(0).getLengthValue().getValueComponent();
 					GeneralWire generalWire = findGeneralWire(generalWires, generalWireOccurrence.getPart());
 					if (generalWire != null && length != null) {
 						crossSectionArea = generalWire.getCrossSectionArea().getValueComponent();
-						resistance = calculateResistance(length, crossSectionArea);							
-						system.getBlock(name).setParameter("R", resistance);
+						resistance = calculateResistance(length, crossSectionArea);	
+						int lengthInt = (int) Math.round(length);
+						name += "_" + crossSectionArea + "_" + lengthInt;
 					} else {
 						resistance = 0.1;
-						system.getBlock(name).setParameter("R", resistance);
 					}					
+				} else {
+					resistance = 1.0;
 				}
+				
+	    		if (system.getBlock(name) == null) {	
+	    			system.addBlock(new Resistor(system, name));	
+	    			system.getBlock(name).setParameter("R", resistance);  
+	    			system.addBlock(new DCCurrentSource(system, name + "_I"));	
+	    			system.getBlock(name + "_I").setParameter("i0", 0.1);
+	    		}
 			
 				if (startExtremity != null) {
 		    		startConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences, startExtremity.getContactPoint());
 		    		ConnectorHousing startConnectorHousing = findConnectorHousing(connectorHousings, startConnectorOccurrence.getPart());
 		    		Integer startPin = findPinNumWithContactPointId(startConnectorOccurrence, startConnectorHousing, startExtremity.getContactPoint());		    				    		
-		    		SimulinkSubsystem startSubsystem = system.getSubsystem(startConnectorOccurrence.getLargeId());
-		    		String nameStartConnection = name + "_" + startConnectorOccurrence.getLargeId() + "_" + startSubsystem.getConnectionPath(startPin.toString());
-		    		if (system.getRelation(nameStartConnection) == null) {
-		    			system.addRelation(new SimulinkExternRelation(system.getBlock(name).getInPort(0), startConnectorOccurrence.getLargeId(), startSubsystem.getConnectionPath(startPin.toString()), system, 0));
-		    		}		    		
+		    		SimulinkSubsystem startSubsystem = system.getSubsystem(startConnectorOccurrence.getLargeId());		    		
+		    		
+		    		String currentToResistor = name + "_I" + "_" + name;
+		    		if (system.getRelation(currentToResistor) == null) {
+		    			system.addRelation(new SimulinkRelation(system.getBlock(name + "_I").getInPort(0), system.getBlock(name).getInPort(0), system));
+		    		}	
+		    		
+		    		String pinToCurrent = name + "_I_" + startConnectorOccurrence.getLargeId() + "_" + startSubsystem.getConnectionPath(startPin.toString());
+		    		if (system.getRelation(pinToCurrent) == null) {
+		    			system.addRelation(new SimulinkExternRelation(system.getBlock(name + "_I").getOutPort(0), startConnectorOccurrence.getLargeId(), startSubsystem.getConnectionPath(startPin.toString()), system, 0));
+		    		}	
 				}
+				
 				if (endExtremity != null) {
 			    	endConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences, endExtremity.getContactPoint());		    			    	
 			    	ConnectorHousing endConnectorHousing = findConnectorHousing(connectorHousings, endConnectorOccurrence.getPart());		    			    	
@@ -179,7 +188,7 @@ public class WiringHarnessFromKBL {
 			    	SimulinkSubsystem endSubsystem = system.getSubsystem(endConnectorOccurrence.getLargeId());
 			    	String nameEndConnection = name + "_" + endConnectorOccurrence.getLargeId() + "_" + endSubsystem.getConnectionPath(endPin.toString());
 			    	if (system.getRelation(nameEndConnection) == null) {
-			    	system.addRelation(new SimulinkExternRelation(system.getBlock(name).getOutPort(0), endConnectorOccurrence.getLargeId(), endSubsystem.getConnectionPath(endPin.toString()), system, 0));
+			    		system.addRelation(new SimulinkExternRelation(system.getBlock(name).getOutPort(0), endConnectorOccurrence.getLargeId(), endSubsystem.getConnectionPath(endPin.toString()), system, 0));
 			    	}
 				}
 	    	}
@@ -296,9 +305,9 @@ public class WiringHarnessFromKBL {
         return null; // If no corresponding CartesianPoint is found
     }
     
-    private ConnectorOccurrence findConnectorOccurrence(List<ConnectorOccurrence> connectorOccurrences, String id) {
+    private ConnectorOccurrence findConnectorOccurrence(List<ConnectorOccurrence> connectorOccurrences, String largeId) {
         for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
-			if (connectorOccurrence.getId().equals(id)) {
+			if (connectorOccurrence.getLargeId().equals(largeId)) {
 				return connectorOccurrence;
 			}
         }

@@ -10,6 +10,7 @@ import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
 public interface ISimulinkBlock extends ISimulinkParameterizable {
     String getName();
+	void setName(String name);
 	List<SimulinkParameter<?>> getParameters();
 	<T> void addParameter(SimulinkParameter<T> parameter);
 	<T> void setParameter(String name, T value);

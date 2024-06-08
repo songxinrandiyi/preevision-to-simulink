@@ -20,16 +20,16 @@ import java.util.List;
 public class WiringHarnessFromExcel {
 	private SimulinkSystem system;
 	private String modelName;
-	private List<String> kblFilePaths = new ArrayList<>();
+	private List<String> filePaths = new ArrayList<>();
 	
-    public WiringHarnessFromExcel(String modelName, List<String> kblFilePaths) {
+    public WiringHarnessFromExcel(String modelName, List<String> filePaths) {
         this.modelName = modelName;
-        this.kblFilePaths = kblFilePaths;
+        this.filePaths = filePaths;
     }
 	
     public void generateModel() {
         system = new SimulinkSystem(modelName);
-        for (String path : kblFilePaths) {
+        for (String path : filePaths) {
             try (FileInputStream fis = new FileInputStream(path);
                     Workbook workbook = new XSSFWorkbook(fis)) {
 

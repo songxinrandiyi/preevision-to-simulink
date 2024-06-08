@@ -84,11 +84,12 @@ public class UIRunner {
                 int result = fileChooser.showOpenDialog(panel);
                 if (result == JFileChooser.APPROVE_OPTION) {
                     File[] files = fileChooser.getSelectedFiles();
-                    selectedFiles.clear();
-                    StringBuilder fileNames = new StringBuilder();
+                    StringBuilder fileNames = new StringBuilder(fileLabel.getText());
                     for (File file : files) {
-                        selectedFiles.add(file);
-                        fileNames.append(file.getName()).append("; ");
+                        if (!selectedFiles.contains(file)) {
+                            selectedFiles.add(file);
+                            fileNames.append(file.getName()).append("; ");
+                        }
                     }
                     fileLabel.setText(fileNames.toString());
                     fileLabel.setToolTipText(fileNames.toString()); // Show the file names on hover
@@ -123,10 +124,10 @@ public class UIRunner {
                         WiringHarnessFromKBL wiringHarnessFromKBL = new WiringHarnessFromKBL(modelName, filePaths);
                         wiringHarnessFromKBL.generateModel();
                         break;
-					case "Wiring Harness From Excel":
-						WiringHarnessFromExcel wiringHarnessFromExcel = new WiringHarnessFromExcel(modelName, filePaths);
-						wiringHarnessFromExcel.generateModel();
-						break;
+                    case "Wiring Harness From Excel":
+                        WiringHarnessFromExcel wiringHarnessFromExcel = new WiringHarnessFromExcel(modelName, filePaths);
+                        wiringHarnessFromExcel.generateModel();
+                        break;
                     default:
                         statusLabel.setText("Unknown generator selected.");
                         return;

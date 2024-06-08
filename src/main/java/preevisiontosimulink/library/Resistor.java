@@ -1,14 +1,16 @@
 package preevisiontosimulink.library;
 
-import preevisiontosimulink.proxy.*;
 import preevisiontosimulink.proxy.block.SimulinkBlock;
 import preevisiontosimulink.proxy.block.SimulinkParameter;
+import preevisiontosimulink.proxy.port.ContactPoint;
 import preevisiontosimulink.proxy.port.LConnectionPort;
 import preevisiontosimulink.proxy.port.RConnectionPort;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
 
 public class Resistor extends SimulinkBlock {
+	private ContactPoint leftContactPoint;
+	private ContactPoint rightContactPoint;
 
     private static int num = 1;
 
@@ -16,7 +18,23 @@ public class Resistor extends SimulinkBlock {
 		super(parent, name);
     }    
 
-    @Override
+	public ContactPoint getLeftContactPoint() {
+		return leftContactPoint;
+	}
+
+	public void setLeftContactPoint(ContactPoint leftContactPoint) {
+		this.leftContactPoint = leftContactPoint;
+	}
+
+	public ContactPoint getRightContactPoint() {
+		return rightContactPoint;
+	}
+
+	public void setRightContactPoint(ContactPoint rightContactPoint) {
+		this.rightContactPoint = rightContactPoint;
+	}
+
+	@Override
     public void initialize() {
     	this.BLOCK_NAME = "Resistor";
     	this.BLOCK_PATH = "fl_lib/Electrical/Electrical Elements/Resistor";

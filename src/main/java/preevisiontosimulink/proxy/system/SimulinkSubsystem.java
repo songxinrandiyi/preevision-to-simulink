@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.mathworks.engine.*;
 
@@ -262,7 +263,35 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 			for (Outport port : outPorts) {
 				port.generateModel(matlab);
 			}
-            
+			
+			if(inConnections != null && inConnections.size() > 0) {
+				matlab.eval("h = getSimulinkBlockHandle('" + combinedPath + "/" + inConnections.get(0).getName() + "')");
+				matlab.eval("pos = get_param(h,'Position')");
+				matlab.eval("pos1 = [pos(1)+100 pos(2) pos(3)+100 pos(4)]");
+				matlab.eval("pos2 = [pos1(1)+70 pos1(2)-70 pos1(3)+70 pos1(4)-70]");
+				matlab.eval("pos3 = [pos2(1)+100 pos2(2) pos2(3)+100 pos2(4)]");
+				matlab.eval("set_param('" + combinedPath + "/" + inConnections.get(0).getName() + "_I', 'Position', pos1)");
+				matlab.eval("set_param('" + combinedPath + "/" + inConnections.get(0).getName() + "_PS', 'Position', pos2)");
+				matlab.eval("set_param('" + combinedPath + "/" + inConnections.get(0).getName() + "_Scope', 'Position', pos3)");
+							
+				for (int i = 1; i < inConnections.size(); i++) {
+					LConnection port = inConnections.get(i);
+					matlab.eval("pos = [pos(1) pos(2)+200 pos(3) pos(4)+200]");	
+					matlab.eval("pos1 = [pos(1)+100 pos(2)-15 pos(3)+100 pos(4)]");
+					matlab.eval("pos2 = [pos1(1)+70 pos1(2)-70 pos1(3)+70 pos1(4)-70]");
+					matlab.eval("pos3 = [pos2(1)+100 pos2(2)-15 pos2(3)+100 pos2(4)]");
+					matlab.eval("set_param('" + combinedPath + "/" + port.getName() + "', 'Position', pos)");
+					matlab.eval("set_param('" + combinedPath + "/" + port.getName() + "_I', 'Position', pos1)");
+					matlab.eval("set_param('" + combinedPath + "/" + port.getName() + "_PS', 'Position', pos2)");
+					matlab.eval("set_param('" + combinedPath + "/" + port.getName() + "_Scope', 'Position', pos3)");
+				}	
+				
+				if(getBlock(name + "_E") != null) {
+					matlab.eval("pos = [pos(1)+700 pos(2)+100 pos(3)+700 pos(4)+100]");	
+					matlab.eval("set_param('" + combinedPath + "/" + name + "_E', 'Position', pos)");
+				}
+			}
+			           
             // Generate the Simulink model for each relation in the relationList
             for (ISimulinkRelation relation : relationList) {
                 relation.generateModel(matlab);
@@ -270,7 +299,6 @@ public class SimulinkSubsystem implements ISimulinkSystem {
             
             matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + combinedPath + "')");
             
-
             System.out.println("Simulink subsystem generated: " + combinedPath);
         }catch (Exception e) {
             e.printStackTrace();
@@ -400,6 +428,22 @@ public class SimulinkSubsystem implements ISimulinkSystem {
             System.out.println("Invalid string format for an integer: " + str);
             return 0; // Return a default value, e.g., 0
         }
+    }
+
+	@Override
+	public List<Resistor> getAllResistorBlocks() {
+        return blockList.stream()
+                .filter(block -> block instanceof Resistor)
+                .map(block -> (Resistor) block)
+                .collect(Collectors.toList());
+	}
+	
+	@Override
+    public List<DCCurrentSource> getAllCurrentSourceBlocks() {
+        return blockList.stream()
+                .filter(block -> block instanceof DCCurrentSource)
+                .map(block -> (DCCurrentSource) block)
+                .collect(Collectors.toList());
     }
 }
 

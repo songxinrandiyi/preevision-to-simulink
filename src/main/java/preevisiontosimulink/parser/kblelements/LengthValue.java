@@ -13,7 +13,7 @@ public class LengthValue {
     private String unitComponent;
 
     @XmlElement(name = "Value_component")
-    private double valueComponent;
+    private Double valueComponent;
 
     // Getters and setters
     public String getId() {
@@ -32,11 +32,11 @@ public class LengthValue {
         this.unitComponent = unitComponent;
     }
 
-    public double getValueComponent() {
+    public Double getValueComponent() {
         return valueComponent;
     }
 
-    public void setValueComponent(double valueComponent) {
+    public void setValueComponent(Double valueComponent) {
         this.valueComponent = valueComponent;
     }
 }

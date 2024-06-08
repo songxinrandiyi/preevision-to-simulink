@@ -1,5 +1,7 @@
 package preevisiontosimulink.parser.kblelements;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.*;
 
 @XmlRootElement(name = "General_wire")
@@ -37,6 +39,9 @@ public class GeneralWire {
 
     @XmlElement(name = "Cover_colour")
     private CoverColour coverColour;
+    
+    @XmlElement(name = "Core")
+    private List<Core> cores;
 
     // Getters and setters
     public String getId() {

@@ -2,9 +2,12 @@ package preevisiontosimulink.proxy.system;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.mathworks.engine.*;
 
+import preevisiontosimulink.library.DCCurrentSource;
+import preevisiontosimulink.library.Resistor;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
 import preevisiontosimulink.proxy.relation.ISimulinkRelation;
 
@@ -58,11 +61,15 @@ public class SimulinkSystem implements ISimulinkSystem {
 				subsystem.generateModel(matlab);
 			}
 			
+			for (DCCurrentSource currentSource : getAllCurrentSourceBlocks()) {
+				currentSource.setParameter("Orientation", "Left");
+			}
+			
             // Generate the Simulink model for each block in the blockList
             for (ISimulinkBlock block : blockList) {
                 block.generateModel(matlab);
             }
-            
+            			            
             // Generate the Simulink model for each relation in the relationList
             for (ISimulinkRelation relation : relationList) {
                 relation.generateModel(matlab);
@@ -128,5 +135,21 @@ public class SimulinkSystem implements ISimulinkSystem {
 		}
 		return null;
 	}
+
+	@Override
+    public List<Resistor> getAllResistorBlocks() {
+        return blockList.stream()
+                .filter(block -> block instanceof Resistor)
+                .map(block -> (Resistor) block)
+                .collect(Collectors.toList());
+    }
+	
+	@Override
+    public List<DCCurrentSource> getAllCurrentSourceBlocks() {
+        return blockList.stream()
+                .filter(block -> block instanceof DCCurrentSource)
+                .map(block -> (DCCurrentSource) block)
+                .collect(Collectors.toList());
+    }
 }
 

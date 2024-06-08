@@ -131,4 +131,9 @@ public class SimulinkBlock implements ISimulinkBlock {
 	    }
 	    return pathBuilder.toString();
 	}
+
+	@Override
+	public void setName(String name) {
+		this.name = name;		
+	}
 }
