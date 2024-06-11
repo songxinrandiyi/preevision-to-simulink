@@ -8,22 +8,22 @@ import javax.xml.bind.annotation.*;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class GeneralWireOccurrence {
 
-    @XmlAttribute(name = "id")
-    private String id;
-    
-    @XmlAttribute(name = "type", namespace = "http://www.w3.org/2001/XMLSchema-instance")
-    private String type;
+	@XmlAttribute(name = "id")
+	private String id;
 
-    @XmlElement(name = "Part")
-    private String part;
+	@XmlAttribute(name = "type", namespace = "http://www.w3.org/2001/XMLSchema-instance")
+	private String type;
 
-    @XmlElement(name = "Length_information")
-    private List<LengthInformation> lengthInformation;
-    
-    @XmlElement(name = "Core_occurrence")
-    private List<CoreOccurrence> coreOccurrences;
+	@XmlElement(name = "Part")
+	private String part;
 
-    public List<CoreOccurrence> getCoreOccurrences() {
+	@XmlElement(name = "Length_information")
+	private List<LengthInformation> lengthInformation;
+
+	@XmlElement(name = "Core_occurrence")
+	private List<CoreOccurrence> coreOccurrences;
+
+	public List<CoreOccurrence> getCoreOccurrences() {
 		return coreOccurrences;
 	}
 
@@ -40,12 +40,12 @@ public class GeneralWireOccurrence {
 	}
 
 	@XmlElement(name = "Wire_number")
-    private Integer wireNumber;
-	
-    @XmlElement(name = "Special_wire_id")
-    private String specialWireId;
+	private Integer wireNumber;
 
-    public String getSpecialWireId() {
+	@XmlElement(name = "Special_wire_id")
+	private String specialWireId;
+
+	public String getSpecialWireId() {
 		return specialWireId;
 	}
 
@@ -54,36 +54,35 @@ public class GeneralWireOccurrence {
 	}
 
 	// Getters and setters
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getPart() {
-        return part;
-    }
+	public String getPart() {
+		return part;
+	}
 
-    public void setPart(String part) {
-        this.part = part;
-    }
+	public void setPart(String part) {
+		this.part = part;
+	}
 
-    public List<LengthInformation> getLengthInformation() {
-        return lengthInformation;
-    }
+	public List<LengthInformation> getLengthInformation() {
+		return lengthInformation;
+	}
 
-    public void setLengthInformation(List<LengthInformation> lengthInformation) {
-        this.lengthInformation = lengthInformation;
-    }
+	public void setLengthInformation(List<LengthInformation> lengthInformation) {
+		this.lengthInformation = lengthInformation;
+	}
 
-    public Integer getWireNumber() {
-        return wireNumber;
-    }
+	public Integer getWireNumber() {
+		return wireNumber;
+	}
 
-    public void setWireNumber(Integer wireNumber) {
-        this.wireNumber = wireNumber;
-    }
+	public void setWireNumber(Integer wireNumber) {
+		this.wireNumber = wireNumber;
+	}
 }
-

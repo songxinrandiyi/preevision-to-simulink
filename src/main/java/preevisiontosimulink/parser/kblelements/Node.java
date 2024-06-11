@@ -5,48 +5,48 @@ import javax.xml.bind.annotation.*;
 @XmlRootElement(name = "Node")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Node {
-    @XmlAttribute(name = "id")
-    private String id;
+	@XmlAttribute(name = "id")
+	private String id;
 
-    @XmlElement(name = "Id")
-    private String nodeId;
+	@XmlElement(name = "Id")
+	private String nodeId;
 
-    @XmlElement(name = "Cartesian_point")
-    private String cartesianPoint;
+	@XmlElement(name = "Cartesian_point")
+	private String cartesianPoint;
 
-    @XmlElement(name = "Referenced_components")
-    private String referencedComponents;
+	@XmlElement(name = "Referenced_components")
+	private String referencedComponents;
 
-    // Getter and Setter methods for all fields
-    public String getId() {
-        return id;
-    }
+	// Getter and Setter methods for all fields
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getNodeId() {
-        return nodeId;
-    }
+	public String getNodeId() {
+		return nodeId;
+	}
 
-    public void setNodeId(String nodeId) {
-        this.nodeId = nodeId;
-    }
+	public void setNodeId(String nodeId) {
+		this.nodeId = nodeId;
+	}
 
-    public String getCartesianPoint() {
-        return cartesianPoint;
-    }
+	public String getCartesianPoint() {
+		return cartesianPoint;
+	}
 
-    public void setCartesianPoint(String cartesianPoint) {
-        this.cartesianPoint = cartesianPoint;
-    }
+	public void setCartesianPoint(String cartesianPoint) {
+		this.cartesianPoint = cartesianPoint;
+	}
 
-    public String getReferencedComponents() {
-        return referencedComponents;
-    }
+	public String getReferencedComponents() {
+		return referencedComponents;
+	}
 
-    public void setReferencedComponents(String referencedComponents) {
-        this.referencedComponents = referencedComponents;
-    }
+	public void setReferencedComponents(String referencedComponents) {
+		this.referencedComponents = referencedComponents;
+	}
 }

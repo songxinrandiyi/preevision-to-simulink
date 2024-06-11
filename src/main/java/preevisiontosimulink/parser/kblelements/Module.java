@@ -6,41 +6,41 @@ import javax.xml.bind.annotation.*;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Module {
 
-    @XmlAttribute(name = "id")
-    private String id;
+	@XmlAttribute(name = "id")
+	private String id;
 
-    @XmlElement(name = "Part_number")
-    private String partNumber;
+	@XmlElement(name = "Part_number")
+	private String partNumber;
 
-    @XmlElement(name = "Company_name")
-    private String companyName;
+	@XmlElement(name = "Company_name")
+	private String companyName;
 
-    @XmlElement(name = "Version")
-    private String version;
+	@XmlElement(name = "Version")
+	private String version;
 
-    @XmlElement(name = "Abbreviation")
-    private String abbreviation;
+	@XmlElement(name = "Abbreviation")
+	private String abbreviation;
 
-    @XmlElement(name = "Description")
-    private String description;
+	@XmlElement(name = "Description")
+	private String description;
 
-    @XmlElement(name = "Predecessor_part_number")
-    private String predecessorPartNumber;
+	@XmlElement(name = "Predecessor_part_number")
+	private String predecessorPartNumber;
 
-    @XmlElement(name = "Mass_information")
-    private MassInformation massInformation;
+	@XmlElement(name = "Mass_information")
+	private MassInformation massInformation;
 
-    @XmlElement(name = "Car_classification_level_2")
-    private String carClassificationLevel2;
+	@XmlElement(name = "Car_classification_level_2")
+	private String carClassificationLevel2;
 
-    @XmlElement(name = "Model_year")
-    private String modelYear;
+	@XmlElement(name = "Model_year")
+	private String modelYear;
 
-    @XmlElement(name = "Content")
-    private String content;
+	@XmlElement(name = "Content")
+	private String content;
 
-    @XmlElement(name = "Module_configuration")
-    private ModuleConfiguration moduleConfiguration;
+	@XmlElement(name = "Module_configuration")
+	private ModuleConfiguration moduleConfiguration;
 
 	public String getId() {
 		return id;

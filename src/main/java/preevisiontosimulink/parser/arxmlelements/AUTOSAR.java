@@ -6,15 +6,15 @@ import javax.xml.bind.annotation.*;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AUTOSAR {
 
-    @XmlElement(name = "AR-PACKAGES")
-    private ArPackages arPackages;
+	@XmlElement(name = "AR-PACKAGES")
+	private ArPackages arPackages;
 
-    // Getters and setters for arPackages
-    public ArPackages getArPackages() {
-        return arPackages;
-    }
+	// Getters and setters for arPackages
+	public ArPackages getArPackages() {
+		return arPackages;
+	}
 
-    public void setArPackages(ArPackages arPackages) {
-        this.arPackages = arPackages;
-    }
+	public void setArPackages(ArPackages arPackages) {
+		this.arPackages = arPackages;
+	}
 }

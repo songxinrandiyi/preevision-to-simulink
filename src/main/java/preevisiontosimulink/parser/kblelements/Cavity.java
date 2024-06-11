@@ -5,16 +5,16 @@ import javax.xml.bind.annotation.*;
 @XmlRootElement(name = "Cavities")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Cavity {
-    @XmlAttribute(name = "id")
-    private String id;
-	
-    @XmlElement(name = "Cavity_number")
-    private int cavityNumber;
-    
-    @XmlElement(name = "Part")
-    private String part;
+	@XmlAttribute(name = "id")
+	private String id;
 
-    public String getPart() {
+	@XmlElement(name = "Cavity_number")
+	private int cavityNumber;
+
+	@XmlElement(name = "Part")
+	private String part;
+
+	public String getPart() {
 		return part;
 	}
 
@@ -23,19 +23,19 @@ public class Cavity {
 	}
 
 	// Getter and Setter for Cavity Number
-    public int getCavityNumber() {
-        return cavityNumber;
-    }
+	public int getCavityNumber() {
+		return cavityNumber;
+	}
 
-    public void setCavityNumber(int cavityNumber) {
-        this.cavityNumber = cavityNumber;
-    }
-    
-    public String getId() {
-        return id;
-    }
+	public void setCavityNumber(int cavityNumber) {
+		this.cavityNumber = cavityNumber;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
 }

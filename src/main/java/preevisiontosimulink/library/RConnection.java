@@ -8,32 +8,29 @@ import preevisiontosimulink.proxy.block.SimulinkParameter;
 import preevisiontosimulink.proxy.port.RConnectionPort;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
-
 public class RConnection extends SimulinkBlock {
-    private static int num = 1;
+	private static int num = 1;
 
-    public RConnection(ISimulinkSystem parent, String name) {
+	public RConnection(ISimulinkSystem parent, String name) {
 		super(parent, name);
-    }    
+	}
 
-    @Override
-    public void initialize() {
-    	this.BLOCK_NAME = "RConn";
-    	this.BLOCK_PATH = "simulink/Signal Routing/Connection Port";
-    	if(name == null) {
-        	this.name = BLOCK_NAME + num;
-    	}
+	@Override
+	public void initialize() {
+		this.BLOCK_NAME = "RConn";
+		this.BLOCK_PATH = "simulink/Signal Routing/Connection Port";
+		if (name == null) {
+			this.name = BLOCK_NAME + num;
+		}
 		num++;
-        // Initialize inputs and outputs if necessary
-        this.inPorts.add(new RConnectionPort(1, this));
-        
-        // Initialize parameters specific to the Sine Wave block
-        this.parameters.add(new SimulinkParameter<String>("Side", this));
+		// Initialize inputs and outputs if necessary
+		this.inPorts.add(new RConnectionPort(1, this));
+
+		// Initialize parameters specific to the Sine Wave block
+		this.parameters.add(new SimulinkParameter<String>("Side", this));
 		this.parameters.add(new SimulinkParameter<String>("Orientation", this));
-		
+
 		this.setParameter("Side", "Right");
 		this.setParameter("Orientation", "Left");
-    }
+	}
 }
-
-

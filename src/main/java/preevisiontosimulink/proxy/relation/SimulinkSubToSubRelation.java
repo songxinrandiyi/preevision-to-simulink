@@ -2,24 +2,24 @@ package preevisiontosimulink.proxy.relation;
 
 import com.mathworks.engine.MatlabEngine;
 
-import preevisiontosimulink.proxy.port.ISimulinkPort;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
-import preevisiontosimulink.proxy.system.SimulinkSubsystem;
 
-public class SimulinkExternRelation implements ISimulinkRelation {
-	private ISimulinkPort outPort;
+public class SimulinkSubToSubRelation implements ISimulinkRelation {
 	private ISimulinkSystem parent;
 	private String name;
-	private String subsystemName;
-	private String portName;
+	private String firstSubsystemName;
+	private String firstPortName;
+	private String secondSubsystemName;
+	private String secondPortName;
 	private int direction;
 
-	public SimulinkExternRelation(ISimulinkPort outPort, String subsystemName, String portName, ISimulinkSystem parent,
-			int direction) {
-		this.subsystemName = subsystemName;
-		this.portName = portName;
-		this.name = outPort.getParent().getName() + "_" + subsystemName + "_" + portName;
-		this.outPort = outPort;
+	public SimulinkSubToSubRelation(String firstSubsystemName, String firstPortName, String secondSubsystemName,
+			String secondPortName, ISimulinkSystem parent, int direction) {
+		this.firstSubsystemName = firstSubsystemName;
+		this.firstPortName = firstPortName;
+		this.secondSubsystemName = secondSubsystemName;
+		this.secondPortName = secondPortName;
+		this.name = firstSubsystemName + "_" + firstPortName + "_" + secondSubsystemName + "_" + secondPortName;
 		this.parent = parent;
 		this.direction = direction;
 	}
@@ -31,10 +31,9 @@ public class SimulinkExternRelation implements ISimulinkRelation {
 
 	@Override
 	public void generateModel(MatlabEngine matlab) {
-		String destinationBlockPath = subsystemName + "/" + portName;
+		String destinationBlockPath = firstSubsystemName + "/" + firstPortName;
 
-		// Implementation for generating the Simulink relation
-		String sourceBlockPath = outPort.getParent().getName() + "/" + outPort.getName();
+		String sourceBlockPath = secondSubsystemName + "/" + secondPortName;
 
 		String parentPath = parent.getName();
 		ISimulinkSystem currentParent = parent.getParent();

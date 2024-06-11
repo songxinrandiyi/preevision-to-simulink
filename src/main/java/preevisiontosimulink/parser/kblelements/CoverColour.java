@@ -4,37 +4,37 @@ import javax.xml.bind.annotation.*;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CoverColour {
-    @XmlAttribute(name = "id")
-    private String id;
+	@XmlAttribute(name = "id")
+	private String id;
 
-    @XmlElement(name = "Colour_type")
-    private String colourType;
+	@XmlElement(name = "Colour_type")
+	private String colourType;
 
-    @XmlElement(name = "Colour_value")
-    private String colourValue;
+	@XmlElement(name = "Colour_value")
+	private String colourValue;
 
-    // Getter and Setter methods for all fields
-    public String getId() {
-        return id;
-    }
+	// Getter and Setter methods for all fields
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getColourType() {
-        return colourType;
-    }
+	public String getColourType() {
+		return colourType;
+	}
 
-    public void setColourType(String colourType) {
-        this.colourType = colourType;
-    }
+	public void setColourType(String colourType) {
+		this.colourType = colourType;
+	}
 
-    public String getColourValue() {
-        return colourValue;
-    }
+	public String getColourValue() {
+		return colourValue;
+	}
 
-    public void setColourValue(String colourValue) {
-        this.colourValue = colourValue;
-    }
+	public void setColourValue(String colourValue) {
+		this.colourValue = colourValue;
+	}
 }

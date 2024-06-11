@@ -7,128 +7,128 @@ import javax.xml.bind.annotation.*;
 @XmlRootElement(name = "General_wire")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class GeneralWire {
-    @XmlAttribute(name = "id")
-    private String id;
+	@XmlAttribute(name = "id")
+	private String id;
 
-    @XmlElement(name = "Part_number")
-    private String partNumber;
+	@XmlElement(name = "Part_number")
+	private String partNumber;
 
-    @XmlElement(name = "Company_name")
-    private String companyName;
+	@XmlElement(name = "Company_name")
+	private String companyName;
 
-    @XmlElement(name = "Version")
-    private String version;
+	@XmlElement(name = "Version")
+	private String version;
 
-    @XmlElement(name = "Abbreviation")
-    private String abbreviation;
+	@XmlElement(name = "Abbreviation")
+	private String abbreviation;
 
-    @XmlElement(name = "Description")
-    private String description;
+	@XmlElement(name = "Description")
+	private String description;
 
-    @XmlElement(name = "Mass_information")
-    private MassInformation massInformation;
+	@XmlElement(name = "Mass_information")
+	private MassInformation massInformation;
 
-    @XmlElement(name = "Wire_type")
-    private String wireType;
+	@XmlElement(name = "Wire_type")
+	private String wireType;
 
-    @XmlElement(name = "Cross_section_area")
-    private CrossSectionArea crossSectionArea;
+	@XmlElement(name = "Cross_section_area")
+	private CrossSectionArea crossSectionArea;
 
-    @XmlElement(name = "Outside_diameter")
-    private OutsideDiameter outsideDiameter;
+	@XmlElement(name = "Outside_diameter")
+	private OutsideDiameter outsideDiameter;
 
-    @XmlElement(name = "Cover_colour")
-    private CoverColour coverColour;
-    
-    @XmlElement(name = "Core")
-    private List<Core> cores;
+	@XmlElement(name = "Cover_colour")
+	private CoverColour coverColour;
 
-    // Getters and setters
-    public String getId() {
-        return id;
-    }
+	@XmlElement(name = "Core")
+	private List<Core> cores;
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	// Getters and setters
+	public String getId() {
+		return id;
+	}
 
-    public String getPartNumber() {
-        return partNumber;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public void setPartNumber(String partNumber) {
-        this.partNumber = partNumber;
-    }
+	public String getPartNumber() {
+		return partNumber;
+	}
 
-    public String getCompanyName() {
-        return companyName;
-    }
+	public void setPartNumber(String partNumber) {
+		this.partNumber = partNumber;
+	}
 
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
+	public String getCompanyName() {
+		return companyName;
+	}
 
-    public String getVersion() {
-        return version;
-    }
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
+	public String getVersion() {
+		return version;
+	}
 
-    public String getAbbreviation() {
-        return abbreviation;
-    }
+	public void setVersion(String version) {
+		this.version = version;
+	}
 
-    public void setAbbreviation(String abbreviation) {
-        this.abbreviation = abbreviation;
-    }
+	public String getAbbreviation() {
+		return abbreviation;
+	}
 
-    public String getDescription() {
-        return description;
-    }
+	public void setAbbreviation(String abbreviation) {
+		this.abbreviation = abbreviation;
+	}
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	public String getDescription() {
+		return description;
+	}
 
-    public MassInformation getMassInformation() {
-        return massInformation;
-    }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-    public void setMassInformation(MassInformation massInformation) {
-        this.massInformation = massInformation;
-    }
+	public MassInformation getMassInformation() {
+		return massInformation;
+	}
 
-    public String getWireType() {
-        return wireType;
-    }
+	public void setMassInformation(MassInformation massInformation) {
+		this.massInformation = massInformation;
+	}
 
-    public void setWireType(String wireType) {
-        this.wireType = wireType;
-    }
+	public String getWireType() {
+		return wireType;
+	}
 
-    public CrossSectionArea getCrossSectionArea() {
-        return crossSectionArea;
-    }
+	public void setWireType(String wireType) {
+		this.wireType = wireType;
+	}
 
-    public void setCrossSectionArea(CrossSectionArea crossSectionArea) {
-        this.crossSectionArea = crossSectionArea;
-    }
+	public CrossSectionArea getCrossSectionArea() {
+		return crossSectionArea;
+	}
 
-    public OutsideDiameter getOutsideDiameter() {
-        return outsideDiameter;
-    }
+	public void setCrossSectionArea(CrossSectionArea crossSectionArea) {
+		this.crossSectionArea = crossSectionArea;
+	}
 
-    public void setOutsideDiameter(OutsideDiameter outsideDiameter) {
-        this.outsideDiameter = outsideDiameter;
-    }
+	public OutsideDiameter getOutsideDiameter() {
+		return outsideDiameter;
+	}
 
-    public CoverColour getCoverColour() {
-        return coverColour;
-    }
+	public void setOutsideDiameter(OutsideDiameter outsideDiameter) {
+		this.outsideDiameter = outsideDiameter;
+	}
 
-    public void setCoverColour(CoverColour coverColour) {
-        this.coverColour = coverColour;
-    }
+	public CoverColour getCoverColour() {
+		return coverColour;
+	}
+
+	public void setCoverColour(CoverColour coverColour) {
+		this.coverColour = coverColour;
+	}
 }

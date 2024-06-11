@@ -5,18 +5,18 @@ import javax.xml.bind.annotation.*;
 @XmlRootElement(name = "AR-PACKAGE")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ArPackage {
-    @XmlAttribute(name = "UUID")
-    private String uuid;
+	@XmlAttribute(name = "UUID")
+	private String uuid;
 
-    @XmlElement(name = "SHORT-NAME")
-    private String shortName;
-    
-    @XmlElement(name = "AR-PACKAGES")
-    private ArPackages arPackages;
+	@XmlElement(name = "SHORT-NAME")
+	private String shortName;
 
-    // Getters and setters
+	@XmlElement(name = "AR-PACKAGES")
+	private ArPackages arPackages;
 
-    public ArPackages getArPackages() {
+	// Getters and setters
+
+	public ArPackages getArPackages() {
 		return arPackages;
 	}
 
@@ -25,18 +25,18 @@ public class ArPackage {
 	}
 
 	public String getUuid() {
-        return uuid;
-    }
+		return uuid;
+	}
 
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
 
-    public String getShortName() {
-        return shortName;
-    }
+	public String getShortName() {
+		return shortName;
+	}
 
-    public void setShortName(String shortName) {
-        this.shortName = shortName;
-    }
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
 }

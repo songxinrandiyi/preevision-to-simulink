@@ -3,25 +3,38 @@ package preevisiontosimulink.parser;
 import javax.xml.bind.*;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import preevisiontosimulink.parser.kblelements.*;
 
 import preevisiontosimulink.library.*;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
 import preevisiontosimulink.proxy.relation.SimulinkExternRelation;
 import preevisiontosimulink.proxy.relation.SimulinkRelation;
+import preevisiontosimulink.proxy.relation.SimulinkSubToSubRelation;
 import preevisiontosimulink.proxy.system.SimulinkSubsystem;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
+import preevisiontosimulink.proxy.system.SubsystemType;
+import preevisiontosimulink.proxy.port.Contact;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class WiringHarnessFromKBL {
 	private SimulinkSystem system;
 	private String modelName;
-    private List<File> kblFiles = new ArrayList<>();
-    private List<File> xlsxFiles = new ArrayList<>();
-	
+	private List<File> kblFiles = new ArrayList<>();
+	private List<File> xlsxFiles = new ArrayList<>();
+	private Double currentValue = null;
+
 	private KBLContainer kblContainer;
 	private List<ConnectorHousing> connectorHousings = new ArrayList<>();
 	private List<Node> nodes = new ArrayList<>();
@@ -32,333 +45,494 @@ public class WiringHarnessFromKBL {
 	private List<Connection> connections = new ArrayList<>();
 	private List<ConnectorOccurrence> connectorOccurrences = new ArrayList<>();
 	private List<GeneralWireOccurrence> generalWireOccurrences = new ArrayList<>();
-		
-    public WiringHarnessFromKBL(String modelName, List<String> paths) {
-        this.modelName = modelName;
-        for (String path : paths) {
-            File file = new File(path);
-            if (path.endsWith(".kbl")) {
-                kblFiles.add(file);
-            } else if (path.endsWith(".xlsx")) {
-                xlsxFiles.add(file);
-            }
-        }
-        init();
-    }
+
+	public WiringHarnessFromKBL(String modelName, List<String> paths, Double currentValue) {
+		this.modelName = modelName;
+		for (String path : paths) {
+			File file = new File(path);
+			if (path.endsWith(".kbl")) {
+				kblFiles.add(file);
+			} else if (path.endsWith(".xlsx")) {
+				xlsxFiles.add(file);
+			}
+		}
+		this.currentValue = currentValue;
+		init();
+	}
+
+	public void generateModel() {
+		system = new SimulinkSystem(modelName);
+
+		generateBlocksAndConnections();
 	
-    public void generateModel() {
-        system = new SimulinkSystem(modelName);
-        
-        generateBlocksAndConnections();	
-        
-        system.generateModel();
-    }
-    
-    private void init() {
-        try {
-            JAXBContext jaxbContext = JAXBContext.newInstance(KBLContainer.class);
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            
-            for (File kblFile : kblFiles) {
-                JAXBElement<KBLContainer> rootElement = jaxbUnmarshaller.unmarshal(new StreamSource(kblFile), KBLContainer.class);
-                kblContainer = rootElement.getValue();                
+		for (File xlsxFile : xlsxFiles) {
+		    try (FileInputStream fis = new FileInputStream(xlsxFile); 
+		         Workbook workbook = new XSSFWorkbook(fis)) {
+
+		        for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+		            Sheet sheet = workbook.getSheetAt(i);
+		            System.out.println("Sheet: " + sheet.getSheetName());
+		            getInformationFromExcel(sheet);
+		        }
+
+		    } catch (IOException e) {
+		        e.printStackTrace();
+		    }
+		}	
+		
+		system.generateModel();
+	}
+
+	private void getInformationFromExcel(Sheet sheet) {
+		int rowBegin = 1; // Start from the second row
+		for (int i = rowBegin; i <= sheet.getLastRowNum(); i++) {
+			Row row = sheet.getRow(i);
+
+			if (row == null) {
+				continue; // Skip if row is null
+			}
+			Cell connector1 = row.getCell(2);
+	        Cell pinnummer1 = row.getCell(3);
+	        Cell connector2 = row.getCell(11);
+	        Cell pinnummer2 = row.getCell(12);
+	        Cell currentValue = row.getCell(7);
+	        
+	        String connectorName1 = null;
+	        String connectorName2 = null;
+	        Integer pin1 = null;
+	        Integer pin2 = null;
+	        Double current = null;
+	        
+	        Boolean notBlank = pinnummer1.getCellType() != CellType.BLANK && pinnummer2.getCellType() != CellType.BLANK 
+	        		&& connector1.getCellType() != CellType.BLANK && connector2.getCellType() != CellType.BLANK
+	        		&& currentValue.getCellType() != CellType.BLANK;
+
+            if (notBlank) {
+            	connectorName1 = connector1.getStringCellValue();
+                pin1 = CellUtils.getIntegerValueFromCell(pinnummer1);
+                if (pin1 == null) {
+					pin1 = 1;
+				}
                 
-                connectorHousings.addAll(kblContainer.getConnectorHousings());
-                nodes.addAll(kblContainer.getNodes());
-                generalWires.addAll(kblContainer.getGeneralWires());
-                harnesses.add(kblContainer.getHarness());
-                segments.addAll(kblContainer.getSegments());
-                units.addAll(kblContainer.getUnits());
-            }
-            
-            for (Harness harness : harnesses) {
-                connections.addAll(harness.getConnections());
-                connectorOccurrences.addAll(harness.getConnectorOccurrences());
-                generalWireOccurrences.addAll(harness.getGeneralWireOccurrences());
-            }
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
-    }
-    
-    private void generateBlocksAndConnections() {
+                Contact leftContact = new Contact(connectorName1, pin1);
+
+				connectorName2 = connector2.getStringCellValue();
+                pin2 = CellUtils.getIntegerValueFromCell(pinnummer2);
+				if (pin2 == null) {
+					pin2 = 1;
+				}
+                
+				Contact rightContact = new Contact(connectorName2, pin2);	
+								
+                current = CellUtils.getNumericValueFromCell(currentValue);
+				if (current == null) {
+					current = 0.05;
+				}
+				
+				SimulinkSubsystem subsystem = system.findSubsystemWithContactPoints(leftContact, rightContact);
+				
+				if (subsystem != null) {
+					ISimulinkBlock block = subsystem.getBlock("I");
+					block.setParameter("i0", current);
+				}
+            } 
+
+	        System.out.println();
+	    }
+	}
+
+	private void init() {
+		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance(KBLContainer.class);
+			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+
+			for (File kblFile : kblFiles) {
+				JAXBElement<KBLContainer> rootElement = jaxbUnmarshaller.unmarshal(new StreamSource(kblFile),
+						KBLContainer.class);
+				kblContainer = rootElement.getValue();
+
+				connectorHousings.addAll(kblContainer.getConnectorHousings());
+				nodes.addAll(kblContainer.getNodes());
+				generalWires.addAll(kblContainer.getGeneralWires());
+				harnesses.add(kblContainer.getHarness());
+				segments.addAll(kblContainer.getSegments());
+				units.addAll(kblContainer.getUnits());
+			}
+
+			for (Harness harness : harnesses) {
+				connections.addAll(harness.getConnections());
+				connectorOccurrences.addAll(harness.getConnectorOccurrences());
+				generalWireOccurrences.addAll(harness.getGeneralWireOccurrences());
+			}
+		} catch (JAXBException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void generateBlocksAndConnections() {
 		for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
 			ConnectorHousing connectorHousing = findConnectorHousing(connectorHousings, connectorOccurrence.getPart());
-			
+
 			if (system.getSubsystem(connectorOccurrence.getLargeId()) == null) {
-				system.addSubsystem(new SimulinkSubsystem(system, connectorOccurrence.getLargeId()));
+				system.addSubsystem(
+						new SimulinkSubsystem(system, connectorOccurrence.getLargeId(), SubsystemType.STECKER));
 				List<Cavity> cavities = connectorOccurrence.getSlots().getCavities();
 				for (Cavity cavity : cavities) {
 					Integer cavityNumber = getCavityNumberById(connectorHousing, cavity.getPart());
-					
+
 					SimulinkSubsystem subsystem = system.getSubsystem(connectorOccurrence.getLargeId());
 					subsystem.addInConnection(new LConnection(subsystem, cavityNumber.toString()));
 				}
 			}
 		}
-		
-		
-		List <SimulinkSubsystem> subsystems = system.getSubsystemList();
+
+		List<SimulinkSubsystem> subsystems = system.getSubsystemList(SubsystemType.STECKER);
 		for (SimulinkSubsystem subsystem : subsystems) {
 			subsystem.reorderConnectionsForKBL();
 			subsystem.addBlock(new ElectricalReference(subsystem, subsystem.getName() + "_E"));
-			
-			List <LConnection> inPorts = subsystem.getInConnections();
+
+			List<LConnection> inPorts = subsystem.getInConnections();
 			if (inPorts != null) {
 				for (LConnection inPort : inPorts) {
 					subsystem.addBlock(new CurrentSensor(subsystem, inPort.getName() + "_I"));
 					subsystem.addBlock(new PSSimulinkConverter(subsystem, inPort.getName() + "_PS"));
-					subsystem.addBlock(new Scope(subsystem, inPort.getName() + "_Scope"));
-					subsystem.addRelation(new SimulinkRelation(inPort.getInPort(0), subsystem.getBlock(inPort.getName() + "_I").getInPort(0), subsystem));
-					subsystem.addRelation(new SimulinkRelation(subsystem.getBlock(inPort.getName() + "_I").getOutPort(1), subsystem.getBlock(subsystem.getName() + "_E").getInPort(0), subsystem));	
-					subsystem.addRelation(new SimulinkRelation(subsystem.getBlock(inPort.getName() + "_I").getOutPort(0), subsystem.getBlock(inPort.getName() + "_PS").getInPort(0), subsystem));		
-					subsystem.addRelation(new SimulinkRelation(subsystem.getBlock(inPort.getName() + "_PS").getOutPort(0), subsystem.getBlock(inPort.getName() + "_Scope").getInPort(0), subsystem));			
+					subsystem.addBlock(new Display(subsystem, inPort.getName() + "_Display"));
+
+					subsystem.addRelation(new SimulinkRelation(inPort.getInPort(0),
+							subsystem.getBlock(inPort.getName() + "_I").getInPort(0), subsystem));
+					subsystem
+							.addRelation(new SimulinkRelation(subsystem.getBlock(inPort.getName() + "_I").getOutPort(1),
+									subsystem.getBlock(subsystem.getName() + "_E").getInPort(0), subsystem));
+					subsystem
+							.addRelation(new SimulinkRelation(subsystem.getBlock(inPort.getName() + "_I").getOutPort(0),
+									subsystem.getBlock(inPort.getName() + "_PS").getInPort(0), subsystem));
+					subsystem.addRelation(
+							new SimulinkRelation(subsystem.getBlock(inPort.getName() + "_PS").getOutPort(0),
+									subsystem.getBlock(inPort.getName() + "_Display").getInPort(0), subsystem));
 				}
 			}
 		}
-				
+
 		for (Connection connection : connections) {
 			String name;
 			Double resistance;
 			Double length;
 			Double crossSectionArea;
 			name = connection.getSignalName();
-						
-	    	List <Extremity> extremities = connection.getExtremities();
-	    	Extremity startExtremity = null;
-	    	Extremity endExtremity = null;
-	    	ConnectorOccurrence startConnectorOccurrence = null;
-	    	ConnectorOccurrence endConnectorOccurrence = null;
-	    	
-	    	if (extremities != null) {
-		    	for (Extremity extremity : extremities) {
-			    	if (extremity.getPositionOnWire() == 0.0) {
-			    		startExtremity = extremity;	
-			    	} else {
-				    	endExtremity = extremity;
-			    	}
-		    	}
-	    	}
-	    	
-	    	if (startExtremity != null && endExtremity != null) {		    		
-				GeneralWireOccurrence generalWireOccurrence = findGeneralWireOccurrence(generalWireOccurrences, connection.getWire());
-				if (generalWireOccurrence != null) {
+			SimulinkSubsystem subsystem = null;
+
+			List<Extremity> extremities = connection.getExtremities();
+			Extremity startExtremity = null;
+			Extremity endExtremity = null;
+			ConnectorOccurrence endConnectorOccurrence = null;
+			ConnectorOccurrence startConnectorOccurrence = null;
+
+			if (extremities != null) {
+				for (Extremity extremity : extremities) {
+					if (extremity.getPositionOnWire() == 0.0) {
+						startExtremity = extremity;
+					} else {
+						endExtremity = extremity;
+					}
+				}
+			}
+
+			if (startExtremity != null && endExtremity != null) {
+				GeneralWireOccurrence generalWireOccurrence = null;
+				if (connection.getWire() != null) {
+					generalWireOccurrence = findGeneralWireOccurrence(generalWireOccurrences,
+							connection.getWire());
+				} 
+				
+				if (generalWireOccurrence != null && generalWireOccurrence.getLengthInformation() != null) {
 					length = generalWireOccurrence.getLengthInformation().get(0).getLengthValue().getValueComponent();
 					GeneralWire generalWire = findGeneralWire(generalWires, generalWireOccurrence.getPart());
 					if (generalWire != null && length != null) {
 						crossSectionArea = generalWire.getCrossSectionArea().getValueComponent();
-						resistance = calculateResistance(length, crossSectionArea);	
+						resistance = calculateResistance(length, crossSectionArea);
 						int lengthInt = (int) Math.round(length);
 						name += "_" + crossSectionArea + "_" + lengthInt;
 					} else {
 						resistance = 0.1;
-					}					
+					}
 				} else {
 					resistance = 1.0;
 				}
 				
-	    		if (system.getBlock(name) == null) {	
-	    			system.addBlock(new Resistor(system, name));	
-	    			system.getBlock(name).setParameter("R", resistance);  
-	    			system.addBlock(new DCCurrentSource(system, name + "_I"));	
-	    			system.getBlock(name + "_I").setParameter("i0", 0.1);
-	    		}
-			
-				if (startExtremity != null) {
-		    		startConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences, startExtremity.getContactPoint());
-		    		ConnectorHousing startConnectorHousing = findConnectorHousing(connectorHousings, startConnectorOccurrence.getPart());
-		    		Integer startPin = findPinNumWithContactPointId(startConnectorOccurrence, startConnectorHousing, startExtremity.getContactPoint());		    				    		
-		    		SimulinkSubsystem startSubsystem = system.getSubsystem(startConnectorOccurrence.getLargeId());		    		
-		    		
-		    		String currentToResistor = name + "_I" + "_" + name;
-		    		if (system.getRelation(currentToResistor) == null) {
-		    			system.addRelation(new SimulinkRelation(system.getBlock(name + "_I").getInPort(0), system.getBlock(name).getInPort(0), system));
-		    		}	
-		    		
-		    		String pinToCurrent = name + "_I_" + startConnectorOccurrence.getLargeId() + "_" + startSubsystem.getConnectionPath(startPin.toString());
-		    		if (system.getRelation(pinToCurrent) == null) {
-		    			system.addRelation(new SimulinkExternRelation(system.getBlock(name + "_I").getOutPort(0), startConnectorOccurrence.getLargeId(), startSubsystem.getConnectionPath(startPin.toString()), system, 0));
-		    		}	
+				if (system.getSubsystem(name) != null) {
+					name = generateUniqueName(system, name);
 				}
-				
-				if (endExtremity != null) {
-			    	endConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences, endExtremity.getContactPoint());		    			    	
-			    	ConnectorHousing endConnectorHousing = findConnectorHousing(connectorHousings, endConnectorOccurrence.getPart());		    			    	
-			    	Integer endPin = findPinNumWithContactPointId(endConnectorOccurrence, endConnectorHousing, endExtremity.getContactPoint());
-			    	SimulinkSubsystem endSubsystem = system.getSubsystem(endConnectorOccurrence.getLargeId());
-			    	String nameEndConnection = name + "_" + endConnectorOccurrence.getLargeId() + "_" + endSubsystem.getConnectionPath(endPin.toString());
-			    	if (system.getRelation(nameEndConnection) == null) {
-			    		system.addRelation(new SimulinkExternRelation(system.getBlock(name).getOutPort(0), endConnectorOccurrence.getLargeId(), endSubsystem.getConnectionPath(endPin.toString()), system, 0));
-			    	}
-				}
-	    	}
-		}
-		
-		/*
-		for (Segment segment : segments) {
-			String name;
-			double resistance = 0;
-			double length = 0;
-			double crossSectionArea = 0;
-			name = segment.getLargeId();
-			
-			Node firstNode = findNode(nodes, segment.getStartNode());
-			Node secondNode = findNode(nodes, segment.getEndNode());
-			
-			if (firstNode != null && secondNode != null && firstNode.getReferencedComponents() != null && secondNode.getReferencedComponents() != null) {
-				system.addBlock(new Resistor(system, name));
-				if (segment.getPhysicalLength() != null) {
-					length = segment.getPhysicalLength().getValueComponent();
-					if (segment.getCrossSectionAreaInformation() != null) {
-						crossSectionArea = segment.getCrossSectionAreaInformation().getArea().getValueComponent();
-						resistance = calculateResistance(length, crossSectionArea);
+
+				if (system.getSubsystem(name) == null) {
+					system.addSubsystem(new SimulinkSubsystem(system, name, SubsystemType.KABEL));
+					subsystem = system.getSubsystem(name);
+					subsystem.addInConnection(new LConnection(subsystem, "in1"));
+					subsystem.addOutConnection(new RConnection(subsystem, "out1"));
+					LConnection inPort = subsystem.getInConnection("in1");
+					RConnection outPort = subsystem.getOutConnection("out1");
+
+					subsystem.addBlock(new Resistor(subsystem, "R"));
+					ISimulinkBlock resistor = subsystem.getBlock("R");
+					resistor.setParameter("R", resistance);
+
+					subsystem.addBlock(new DCCurrentSource(subsystem, "I"));
+					ISimulinkBlock currentSource = subsystem.getBlock("I");
+					if (this.currentValue != null) {
+						currentSource.setParameter("i0", this.currentValue);
 					} else {
-						resistance = 0.1E-4;
+						currentSource.setParameter("i0", 0.05);
 					}
-				} 
-				
-				system.getBlock(name).setParameter("R", resistance);
-				
-				ConnectorOccurrence firstConnectorOccurrence = findConnectorOccurrence(connectorOccurrences, firstNode.getReferencedComponents());
-				ConnectorHousing firstConnectorHousing = findConnectorHousing(connectorHousings, firstConnectorOccurrence.getPart());
-				SimulinkSubsystem firstSubsystem = system.getSubsystem(firstConnectorHousing.getDescription());
-				system.addRelation(new SimulinkExternRelation(system.getBlock(name).getInPort(0), firstConnectorHousing.getDescription(), firstSubsystem.getConnectionPath(firstConnectorOccurrence.getLargeId()), system, 0));
-				
-				ConnectorOccurrence secondConnectorOccurrence = findConnectorOccurrence(connectorOccurrences, secondNode.getReferencedComponents());
-				ConnectorHousing secondConnectorHousing = findConnectorHousing(connectorHousings, secondConnectorOccurrence.getPart());
-				SimulinkSubsystem secondSubsystem = system.getSubsystem(secondConnectorHousing.getDescription());
-				system.addRelation(new SimulinkExternRelation(system.getBlock(name).getOutPort(0), secondConnectorHousing.getDescription(), secondSubsystem.getConnectionPath(secondConnectorOccurrence.getLargeId()), system, 0));
-			}
-		}
-		*/
-	}
-        
-    private GeneralWire findGeneralWire(List<GeneralWire> generalWires, String id) {
-        for (GeneralWire generalWire : generalWires) {
-            if (generalWire.getId().equals(id)) {
-                return generalWire;
-            }
-        }
-        return null; // If no corresponding CartesianPoint is found
-    }
-    
-    private ConnectorHousing findConnectorHousing(List<ConnectorHousing> connectorHousings, String id) {
-        for (ConnectorHousing connectorHousing : connectorHousings) {
-            if (connectorHousing.getId().equals(id)) {
-                return connectorHousing;
-            }
-        }
-        return null; // If no corresponding CartesianPoint is found
-    }
-    
-    private ConnectorOccurrence findConnectorOccurrenceWithContactPoint(List<ConnectorOccurrence> connectorOccurrences, String id) {
-        for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
-            List <ContactPoint> contactPoints = connectorOccurrence.getContactPoints();
-            for (ContactPoint contactPoint : contactPoints) {
-				if (contactPoint.getId().equals(id)) {
-					return connectorOccurrence;
+					
+					subsystem.addBlock(new VoltageSensor(subsystem, "U"));
+					ISimulinkBlock voltageSensor = subsystem.getBlock("U");
+
+					subsystem.addBlock(new PSSimulinkConverter(subsystem, "PS"));
+					ISimulinkBlock converter = subsystem.getBlock("PS");
+
+					subsystem.addBlock(new Display(subsystem, "Display"));
+					ISimulinkBlock display = subsystem.getBlock("Display");
+
+					subsystem.addRelation(
+							new SimulinkRelation(inPort.getInPort(0), currentSource.getOutPort(0), subsystem));
+					subsystem.addRelation(
+							new SimulinkRelation(currentSource.getInPort(0), resistor.getInPort(0), subsystem));
+					subsystem
+							.addRelation(new SimulinkRelation(resistor.getOutPort(0), outPort.getInPort(0), subsystem));
+
+					subsystem.addRelation(
+							new SimulinkRelation(resistor.getOutPort(0), voltageSensor.getOutPort(1), subsystem));
+					subsystem.addRelation(
+							new SimulinkRelation(resistor.getInPort(0), voltageSensor.getInPort(0), subsystem));
+					subsystem.addRelation(
+							new SimulinkRelation(voltageSensor.getOutPort(0), converter.getInPort(0), subsystem));
+					subsystem.addRelation(
+							new SimulinkRelation(converter.getOutPort(0), display.getInPort(0), subsystem));
+				}
+
+				if (startExtremity != null && startExtremity.getContactPoint() != null) {
+					startConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences,
+							startExtremity.getContactPoint());
+					if (startConnectorOccurrence != null) {
+						ConnectorHousing startConnectorHousing = findConnectorHousing(connectorHousings,
+								startConnectorOccurrence.getPart());
+						if (startConnectorHousing != null) {
+							Integer startPin = findPinNumWithContactPointId(startConnectorOccurrence, startConnectorHousing,
+									startExtremity.getContactPoint());
+							SimulinkSubsystem startStecker = system.getSubsystem(startConnectorOccurrence.getLargeId());
+
+							String path = startConnectorOccurrence.getLargeId() + "_"
+									+ startStecker.getConnectionPath(startPin.toString()) + "_" + name + "_LConn1";
+							if (system.getRelation(path) == null) {
+								system.addRelation(new SimulinkSubToSubRelation(startConnectorOccurrence.getLargeId(),
+										startStecker.getConnectionPath(startPin.toString()), name, "LConn1", system, 0));
+								Contact leftContactPoint = new Contact(startConnectorOccurrence.getLargeId(), startPin);
+								subsystem.setLeftContactPoint(leftContactPoint);
+							}
+						}
+					}
+				}
+
+				if (endExtremity != null && endExtremity.getContactPoint() != null) {
+					endConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences,
+							endExtremity.getContactPoint());
+					if (endConnectorOccurrence != null) {
+						ConnectorHousing endConnectorHousing = findConnectorHousing(connectorHousings,
+								endConnectorOccurrence.getPart());
+						if (endConnectorHousing != null) {
+
+							Integer endPin = findPinNumWithContactPointId(endConnectorOccurrence, endConnectorHousing,
+									endExtremity.getContactPoint());
+							SimulinkSubsystem endStecker = system.getSubsystem(endConnectorOccurrence.getLargeId());
+
+							String path = endConnectorOccurrence.getLargeId() + "_"
+									+ endStecker.getConnectionPath(endPin.toString()) + "_" + name + "_RConn1";
+							if (system.getRelation(path) == null) {
+								system.addRelation(new SimulinkSubToSubRelation(endConnectorOccurrence.getLargeId(),
+										endStecker.getConnectionPath(endPin.toString()), name, "RConn1", system, 0));
+								Contact rightContactPoint = new Contact(endConnectorOccurrence.getLargeId(), endPin);
+								subsystem.setRightContactPoint(rightContactPoint);
+							}
+						}
+					}
 				}
 			}
-        }
-        return null; // If no corresponding CartesianPoint is found
-    }
-    
-    private Integer findPinNumWithContactPointId(ConnectorOccurrence connectorOccurrence, ConnectorHousing connectorHousing, String id) {
-        List <ContactPoint> contactPoints = connectorOccurrence.getContactPoints();
-        ContactPoint contactPoint = null;
-        Cavity cavityInConnectorOccurrence = null;
-        Cavity cavityInConnectorHousing = null;
-        for (ContactPoint contact : contactPoints) {
-			if (contact.getId().equals(id)) {
-				contactPoint = contact;
+		}
+	}
+
+	private GeneralWire findGeneralWire(List<GeneralWire> generalWires, String id) {
+		if (generalWires != null) {
+			for (GeneralWire generalWire : generalWires) {
+				if (generalWire.getId().equals(id)) {
+					return generalWire;
+				}
 			}
 		}
-        if (contactPoint == null) {
-			return null;
+
+		return null; // If no corresponding CartesianPoint is found
+	}
+
+	private ConnectorHousing findConnectorHousing(List<ConnectorHousing> connectorHousings, String id) {
+		if (connectorHousings != null) {
+			for (ConnectorHousing connectorHousing : connectorHousings) {
+				if (connectorHousing.getId().equals(id)) {
+					return connectorHousing;
+				}
+			}
 		}
-        cavityInConnectorOccurrence = findCavityInConnectorOccurrence(connectorOccurrence, contactPoint.getContactedCavity());
-		cavityInConnectorHousing = findCavityInConnectorHousing(connectorHousing, cavityInConnectorOccurrence.getPart());
-		if (cavityInConnectorHousing != null) {
-			return cavityInConnectorHousing.getCavityNumber();
+
+		return null; // If no corresponding CartesianPoint is found
+	}
+
+	private ConnectorOccurrence findConnectorOccurrenceWithContactPoint(List<ConnectorOccurrence> connectorOccurrences,
+			String id) {
+		if (connectorOccurrences != null) {
+			for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
+				List<ContactPoint> contactPoints = connectorOccurrence.getContactPoints();
+				if (contactPoints != null) {
+					for (ContactPoint contactPoint : contactPoints) {
+						if (contactPoint.getId().equals(id)) {
+							return connectorOccurrence;
+						}
+					}
+				}
+			}
+		}
+
+		return null; // If no corresponding CartesianPoint is found
+	}
+
+	private Integer findPinNumWithContactPointId(ConnectorOccurrence connectorOccurrence,
+			ConnectorHousing connectorHousing, String id) {
+		if (connectorOccurrence != null && connectorHousing != null) {
+			List<ContactPoint> contactPoints = connectorOccurrence.getContactPoints();
+			ContactPoint contactPoint = null;
+			Cavity cavityInConnectorOccurrence = null;
+			Cavity cavityInConnectorHousing = null;
+			for (ContactPoint contact : contactPoints) {
+				if (contact.getId().equals(id)) {
+					contactPoint = contact;
+				}
+			}
+			if (contactPoint == null) {
+				return null;
+			}
+			cavityInConnectorOccurrence = findCavityInConnectorOccurrence(connectorOccurrence,
+					contactPoint.getContactedCavity());
+			cavityInConnectorHousing = findCavityInConnectorHousing(connectorHousing,
+					cavityInConnectorOccurrence.getPart());
+			if (cavityInConnectorHousing != null) {
+				return cavityInConnectorHousing.getCavityNumber();
+			} else {
+				return null;
+			}
 		} else {
 			return null;
 		}
-    }
-    
-    private Cavity findCavityInConnectorOccurrence(ConnectorOccurrence connectorOccurrence, String id) {
-        List <Cavity> cavities = connectorOccurrence.getSlots().getCavities();
-        for (Cavity cavity : cavities) {
+	}
+
+	private Cavity findCavityInConnectorOccurrence(ConnectorOccurrence connectorOccurrence, String id) {
+		if (connectorOccurrence != null) {
+			List<Cavity> cavities = connectorOccurrence.getSlots().getCavities();
+			for (Cavity cavity : cavities) {
+				if (cavity.getId().equals(id)) {
+					return cavity;
+				}
+			}
+		}
+
+		return null; // If no corresponding CartesianPoint is found
+	}
+
+	private Cavity findCavityInConnectorHousing(ConnectorHousing connectorHousing, String id) {
+		if (connectorHousing == null || connectorHousing.getSlots() == null) {
+			return null;
+		}
+		
+		List<Cavity> cavities = connectorHousing.getSlots().getCavities();
+		for (Cavity cavity : cavities) {
 			if (cavity.getId().equals(id)) {
 				return cavity;
 			}
 		}
-        return null; // If no corresponding CartesianPoint is found
-    }
-    
-    private Cavity findCavityInConnectorHousing(ConnectorHousing connectorHousing, String id) {
-        List <Cavity> cavities = connectorHousing.getSlots().getCavities();
-        for (Cavity cavity : cavities) {
-			if (cavity.getId().equals(id)) {
-				return cavity;
-			}
-		}
-        return null; // If no corresponding CartesianPoint is found
-    }
-    
-    private ConnectorOccurrence findConnectorOccurrence(List<ConnectorOccurrence> connectorOccurrences, String largeId) {
-        for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
+		return null; // If no corresponding CartesianPoint is found
+	}
+
+	private ConnectorOccurrence findConnectorOccurrence(List<ConnectorOccurrence> connectorOccurrences,
+			String largeId) {
+		for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
 			if (connectorOccurrence.getLargeId().equals(largeId)) {
 				return connectorOccurrence;
 			}
-        }
-        return null; // If no corresponding CartesianPoint is found
-    }
-    
-    private Node findNode(List<Node> nodes, String id) {
-        for (Node node : nodes) {
+		}
+		return null; // If no corresponding CartesianPoint is found
+	}
+
+	private Node findNode(List<Node> nodes, String id) {
+		for (Node node : nodes) {
 			if (node.getId().equals(id)) {
 				return node;
 			}
-        }
-        return null; // If no corresponding CartesianPoint is found
-    }
-    
-    private Integer getCavityNumberById(ConnectorHousing connectorHousing, String cavityId) {
-        if (connectorHousing == null || connectorHousing.getSlots() == null) {
-            return null;
-        }
-        
-        Slots slots = connectorHousing.getSlots();
-        List<Cavity> cavities = slots.getCavities();
-        
-        if (cavities != null) {
-            for (Cavity cavity : cavities) {
-                if (cavityId.equals(cavity.getId())) {
-                    return cavity.getCavityNumber();
-                }
-            }
-        }
-        
-        return null; // Return null if the cavity with the given ID is not found
-    }
-    
-    private GeneralWireOccurrence findGeneralWireOccurrence(List<GeneralWireOccurrence> generalWireOccurrences, String id) {
-        for (GeneralWireOccurrence generalWireOccurrence : generalWireOccurrences) {
-            if (generalWireOccurrence.getId().equals(id)) {
-                return generalWireOccurrence;
-            }
-        }
-        return null; // If no corresponding CartesianPoint is found
-    }
-    
-    private double calculateResistance(double length, double crossSectionalArea) {
-        // Convert cross-sectional area from mm² to m² (1 mm² = 1e-6 m²)
-        double crossSectionalAreaM2 = crossSectionalArea * 1e-6;
+		}
+		return null; // If no corresponding CartesianPoint is found
+	}
 
-        // Convert length from mm to meters (1 mm = 1e-3 m)
-        double lengthM = length * 1e-3;
+	private Integer getCavityNumberById(ConnectorHousing connectorHousing, String cavityId) {
+		if (connectorHousing == null || connectorHousing.getSlots() == null) {
+			return null;
+		}
 
-        // Calculate and return resistance using the formula R = ρ * (L / A)
-        return 1.77e-8 * (lengthM / crossSectionalAreaM2);
+		Slots slots = connectorHousing.getSlots();
+		List<Cavity> cavities = slots.getCavities();
+
+		if (cavities != null) {
+			for (Cavity cavity : cavities) {
+				if (cavityId.equals(cavity.getId())) {
+					return cavity.getCavityNumber();
+				}
+			}
+		}
+
+		return null; // Return null if the cavity with the given ID is not found
+	}
+
+	private GeneralWireOccurrence findGeneralWireOccurrence(List<GeneralWireOccurrence> generalWireOccurrences,
+			String id) {
+		if (generalWireOccurrences == null) {
+			return null;
+		}
+		for (GeneralWireOccurrence generalWireOccurrence : generalWireOccurrences) {
+			if (generalWireOccurrence.getId().equals(id)) {
+				return generalWireOccurrence;
+			}
+		}
+		return null; // If no corresponding CartesianPoint is found
+	}
+
+	private double calculateResistance(double length, double crossSectionalArea) {
+		// Convert cross-sectional area from mm² to m² (1 mm² = 1e-6 m²)
+		double crossSectionalAreaM2 = crossSectionalArea * 1e-6;
+
+		// Convert length from mm to meters (1 mm = 1e-3 m)
+		double lengthM = length * 1e-3;
+
+		// Calculate and return resistance using the formula R = ρ * (L / A)
+		return 1.77e-8 * (lengthM / crossSectionalAreaM2);
+	}
+	
+    // Recursive method to generate a unique name
+    private String generateUniqueName(SimulinkSystem system, String name) {
+        if (system.getSubsystem(name) != null) {
+            // If the name exists, append or increment the suffix and try again
+            int suffix = 1;
+            String newName;
+            do {
+                newName = name + "_" + suffix;
+                suffix++;
+            } while (system.getSubsystem(newName) != null);
+            return generateUniqueName(system, newName);
+        } else {
+            // If the name is unique, return it
+            return name;
+        }
     }
 }

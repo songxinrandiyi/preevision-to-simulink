@@ -12,6 +12,7 @@ import java.util.List;
 
 public class UIRunner {
     private static JTextField modelNameField;
+    private static JTextField currentValueField;
     private static JLabel fileLabel;
     private static List<File> selectedFiles = new ArrayList<>();
     private static JComboBox<String> generatorComboBox;
@@ -19,7 +20,7 @@ public class UIRunner {
     public static void main(String[] args) {
         JFrame frame = new JFrame("Simulink Model Generator");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(500, 300);
+        frame.setSize(500, 350);
 
         JPanel panel = new JPanel();
         frame.add(panel);
@@ -45,33 +46,41 @@ public class UIRunner {
         modelNameField.setBounds(140, 60, 300, 25);
         panel.add(modelNameField);
 
+        JLabel currentValueLabel = new JLabel("Default Current Value:");
+        currentValueLabel.setBounds(50, 100, 150, 25);
+        panel.add(currentValueLabel);
+
+        currentValueField = new JTextField(20);
+        currentValueField.setBounds(200, 100, 240, 25);
+        panel.add(currentValueField);
+
         JLabel fileChooserLabel = new JLabel("Select Files:");
-        fileChooserLabel.setBounds(50, 100, 80, 25);
+        fileChooserLabel.setBounds(50, 140, 80, 25);
         panel.add(fileChooserLabel);
 
         JButton fileButton = new JButton("Browse");
-        fileButton.setBounds(140, 100, 100, 25);
+        fileButton.setBounds(140, 140, 100, 25);
         panel.add(fileButton);
 
         fileLabel = new JLabel("");
-        fileLabel.setBounds(250, 100, 200, 25);
+        fileLabel.setBounds(250, 140, 200, 25);
         panel.add(fileLabel);
 
         JLabel generatorLabel = new JLabel("Generator:");
-        generatorLabel.setBounds(50, 140, 80, 25);
+        generatorLabel.setBounds(50, 180, 80, 25);
         panel.add(generatorLabel);
 
         String[] generators = {"Wiring Harness From KBL", "Wiring Harness From Excel"};
         generatorComboBox = new JComboBox<>(generators);
-        generatorComboBox.setBounds(140, 140, 300, 25);
+        generatorComboBox.setBounds(140, 180, 300, 25);
         panel.add(generatorComboBox);
 
         JButton runButton = new JButton("Generate");
-        runButton.setBounds(200, 200, 100, 25);
+        runButton.setBounds(200, 220, 100, 25);
         panel.add(runButton);
 
         JLabel statusLabel = new JLabel("");
-        statusLabel.setBounds(160, 230, 200, 25);
+        statusLabel.setBounds(160, 260, 200, 25);
         panel.add(statusLabel);
 
         fileButton.addActionListener(new ActionListener() {
@@ -101,6 +110,17 @@ public class UIRunner {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String modelName = modelNameField.getText();
+                String currentValueStr = currentValueField.getText();
+                Double currentValue = null;
+                if (!currentValueStr.isEmpty()) {
+                    try {
+                        currentValue = Double.parseDouble(currentValueStr);
+                    } catch (NumberFormatException ex) {
+                        statusLabel.setText("Invalid current value. Please enter a valid number.");
+                        return;
+                    }
+                }
+
                 if (modelName.isEmpty() || selectedFiles.isEmpty()) {
                     statusLabel.setText("Model name or files not selected.");
                     return;
@@ -121,7 +141,7 @@ public class UIRunner {
 
                 switch (selectedGenerator) {
                     case "Wiring Harness From KBL":
-                        WiringHarnessFromKBL wiringHarnessFromKBL = new WiringHarnessFromKBL(modelName, filePaths);
+                        WiringHarnessFromKBL wiringHarnessFromKBL = new WiringHarnessFromKBL(modelName, filePaths, currentValue);
                         wiringHarnessFromKBL.generateModel();
                         break;
                     case "Wiring Harness From Excel":

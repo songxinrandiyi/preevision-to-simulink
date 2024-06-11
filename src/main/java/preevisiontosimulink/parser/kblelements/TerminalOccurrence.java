@@ -6,27 +6,26 @@ import javax.xml.bind.annotation.*;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class TerminalOccurrence {
 
-    @XmlAttribute(name = "id")
-    private String id;
+	@XmlAttribute(name = "id")
+	private String id;
 
-    @XmlElement(name = "Part")
-    private String part;
+	@XmlElement(name = "Part")
+	private String part;
 
-    // Getters and setters
-    public String getId() {
-        return id;
-    }
+	// Getters and setters
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getPart() {
-        return part;
-    }
+	public String getPart() {
+		return part;
+	}
 
-    public void setPart(String part) {
-        this.part = part;
-    }
+	public void setPart(String part) {
+		this.part = part;
+	}
 }
-
