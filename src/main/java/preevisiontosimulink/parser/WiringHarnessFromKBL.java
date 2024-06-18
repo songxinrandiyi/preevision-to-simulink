@@ -20,12 +20,16 @@ import preevisiontosimulink.proxy.relation.SimulinkSubToSubRelation;
 import preevisiontosimulink.proxy.system.SimulinkSubsystem;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
 import preevisiontosimulink.proxy.system.SubsystemType;
+import preevisiontosimulink.util.CellUtils;
 import preevisiontosimulink.proxy.port.Contact;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class WiringHarnessFromKBL {
@@ -82,7 +86,104 @@ public class WiringHarnessFromKBL {
 		
 		system.generateModel();
 	}
+	
+	public void generateExcel() {
+	    system = new SimulinkSystem(modelName);
 
+	    generateBlocksAndConnections();
+
+	    // Create a Workbook
+	    Workbook workbook = new XSSFWorkbook(); // .xlsx format
+	    // Workbook workbook = new HSSFWorkbook(); // .xls format
+
+	    // Create a Sheet
+	    Sheet sheet = workbook.createSheet(modelName);
+
+	    // Create a Row for header
+	    Row headerRow = sheet.createRow(0);
+
+	    // Create header cells
+	    headerRow.createCell(0).setCellValue("Wire");
+	    headerRow.createCell(1).setCellValue("Component1");
+	    headerRow.createCell(2).setCellValue("WireConnector1");
+	    headerRow.createCell(3).setCellValue("Pinnummer1");
+	    headerRow.createCell(4).setCellValue("SchematicPin1");
+	    headerRow.createCell(5).setCellValue("PinType1");
+	    headerRow.createCell(6).setCellValue("SealType1");
+	    headerRow.createCell(7).setCellValue("Typical Current");
+	    headerRow.createCell(8).setCellValue("Max Peak Current");
+	    headerRow.createCell(9).setCellValue("Max Peak Current Duration");
+	    headerRow.createCell(10).setCellValue("Component2");
+	    headerRow.createCell(11).setCellValue("WireConnector2");
+	    headerRow.createCell(12).setCellValue("Pinnummer2");
+	    headerRow.createCell(13).setCellValue("Schematic Pin2");
+	    headerRow.createCell(14).setCellValue("PinType2");
+	    headerRow.createCell(15).setCellValue("SealType2");
+	    headerRow.createCell(16).setCellValue("Typical current");
+	    headerRow.createCell(17).setCellValue("Max Peak Current");
+	    headerRow.createCell(18).setCellValue("Max Peak Current Duration");
+	    headerRow.createCell(19).setCellValue("WireType");
+	    headerRow.createCell(20).setCellValue("Ø");
+	    headerRow.createCell(21).setCellValue("Wire Length");
+	    headerRow.createCell(22).setCellValue("FeatureNo.");
+	    headerRow.createCell(23).setCellValue("Feature");
+	    headerRow.createCell(24).setCellValue("GeometryDiagram");
+
+	    List<SimulinkSubsystem> subsystems = system.getSubsystemList(SubsystemType.KABEL);
+	    
+	    List<SimulinkSubsystem> filteredSubsystems = new ArrayList<>();
+
+	    for (SimulinkSubsystem subsystem : subsystems) {
+	        if (subsystem.getContactPoints() != null && subsystem.getContactPoints().size() == 2) {
+	            filteredSubsystems.add(subsystem);
+	        }
+	    }
+	    
+        // Sortiere die Subsysteme nach dem Namen des ersten Kontaktpunkts, wenn dieser nicht null ist
+        Collections.sort(filteredSubsystems, new Comparator<SimulinkSubsystem>() {
+            @Override
+            public int compare(SimulinkSubsystem subsystem1, SimulinkSubsystem subsystem2) {
+                String name1 = subsystem1.getContactPoints().get(0).getName();
+                String name2 = subsystem2.getContactPoints().get(0).getName();
+                return name1.compareTo(name2);
+            }
+        });
+
+	    // Create data rows
+	    for (int i = 1; i <= filteredSubsystems.size(); i++) {
+	        Row row = sheet.createRow(i);
+
+	        SimulinkSubsystem subsystem = filteredSubsystems.get(i - 1);
+	        row.createCell(2).setCellValue(subsystem.getContactPoints().get(0).getName());
+            row.createCell(11).setCellValue(subsystem.getContactPoints().get(1).getName());
+            if (subsystem.getCrossSectionArea() != null) {
+            	row.createCell(20).setCellValue(subsystem.getCrossSectionArea());
+            }
+            if (subsystem.getLength() != null) {
+            	row.createCell(21).setCellValue(subsystem.getLength());
+            }
+	    }
+
+	    // Resize columns to fit the content
+	    for (int i = 0; i < 24; i++) {
+	        sheet.autoSizeColumn(i);
+	    }
+
+	    // Write the output to a file
+	    try (FileOutputStream fileOut = new FileOutputStream(modelName + ".xlsx")) {
+	        workbook.write(fileOut);
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    } finally {
+	        // Closing the workbook
+	        try {
+	            workbook.close();
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	}
+	
 	private void getInformationFromExcel(Sheet sheet) {
 		int rowBegin = 1; // Start from the second row
 		for (int i = rowBegin; i <= sheet.getLastRowNum(); i++) {
@@ -114,7 +215,7 @@ public class WiringHarnessFromKBL {
 					pin1 = 1;
 				}
                 
-                Contact leftContact = new Contact(connectorName1, pin1);
+                Contact leftContact = new Contact(connectorName1, pin1, 1);
 
 				connectorName2 = connector2.getStringCellValue();
                 pin2 = CellUtils.getIntegerValueFromCell(pinnummer2);
@@ -122,7 +223,7 @@ public class WiringHarnessFromKBL {
 					pin2 = 1;
 				}
                 
-				Contact rightContact = new Contact(connectorName2, pin2);	
+				Contact rightContact = new Contact(connectorName2, pin2, 2);	
 								
                 current = CellUtils.getNumericValueFromCell(currentValue);
 				if (current == null) {
@@ -182,6 +283,7 @@ public class WiringHarnessFromKBL {
 
 					SimulinkSubsystem subsystem = system.getSubsystem(connectorOccurrence.getLargeId());
 					subsystem.addInConnection(new LConnection(subsystem, cavityNumber.toString()));
+					subsystem.addNumOfPins();
 				}
 			}
 		}
@@ -215,9 +317,9 @@ public class WiringHarnessFromKBL {
 
 		for (Connection connection : connections) {
 			String name;
-			Double resistance;
-			Double length;
-			Double crossSectionArea;
+			Double resistance = 0.0;
+			Double length = null;
+			Double crossSectionArea = null;
 			name = connection.getSignalName();
 			SimulinkSubsystem subsystem = null;
 
@@ -226,6 +328,11 @@ public class WiringHarnessFromKBL {
 			Extremity endExtremity = null;
 			ConnectorOccurrence endConnectorOccurrence = null;
 			ConnectorOccurrence startConnectorOccurrence = null;
+			
+			SimulinkSubsystem endStecker = null;
+			SimulinkSubsystem startStecker = null;
+			Integer startPin = null;
+			Integer endPin = null;
 
 			if (extremities != null) {
 				for (Extremity extremity : extremities) {
@@ -249,9 +356,11 @@ public class WiringHarnessFromKBL {
 					GeneralWire generalWire = findGeneralWire(generalWires, generalWireOccurrence.getPart());
 					if (generalWire != null && length != null) {
 						crossSectionArea = generalWire.getCrossSectionArea().getValueComponent();
-						resistance = calculateResistance(length, crossSectionArea);
-						int lengthInt = (int) Math.round(length);
-						name += "_" + crossSectionArea + "_" + lengthInt;
+						if (crossSectionArea != null) {
+							resistance = calculateResistance(length, crossSectionArea);
+							int lengthInt = (int) Math.round(length);
+							name += "_" + crossSectionArea + "_" + lengthInt;
+						}					
 					} else {
 						resistance = 0.1;
 					}
@@ -316,17 +425,17 @@ public class WiringHarnessFromKBL {
 						ConnectorHousing startConnectorHousing = findConnectorHousing(connectorHousings,
 								startConnectorOccurrence.getPart());
 						if (startConnectorHousing != null) {
-							Integer startPin = findPinNumWithContactPointId(startConnectorOccurrence, startConnectorHousing,
+							startPin = findPinNumWithContactPointId(startConnectorOccurrence, startConnectorHousing,
 									startExtremity.getContactPoint());
-							SimulinkSubsystem startStecker = system.getSubsystem(startConnectorOccurrence.getLargeId());
+							startStecker = system.getSubsystem(startConnectorOccurrence.getLargeId());
 
 							String path = startConnectorOccurrence.getLargeId() + "_"
 									+ startStecker.getConnectionPath(startPin.toString()) + "_" + name + "_LConn1";
 							if (system.getRelation(path) == null) {
 								system.addRelation(new SimulinkSubToSubRelation(startConnectorOccurrence.getLargeId(),
 										startStecker.getConnectionPath(startPin.toString()), name, "LConn1", system, 0));
-								Contact leftContactPoint = new Contact(startConnectorOccurrence.getLargeId(), startPin);
-								subsystem.setLeftContactPoint(leftContactPoint);
+								Contact leftContactPoint = new Contact(startConnectorOccurrence.getLargeId(), startPin, 1);
+								subsystem.addContact(leftContactPoint);
 							}
 						}
 					}
@@ -340,17 +449,35 @@ public class WiringHarnessFromKBL {
 								endConnectorOccurrence.getPart());
 						if (endConnectorHousing != null) {
 
-							Integer endPin = findPinNumWithContactPointId(endConnectorOccurrence, endConnectorHousing,
+							endPin = findPinNumWithContactPointId(endConnectorOccurrence, endConnectorHousing,
 									endExtremity.getContactPoint());
-							SimulinkSubsystem endStecker = system.getSubsystem(endConnectorOccurrence.getLargeId());
+							endStecker = system.getSubsystem(endConnectorOccurrence.getLargeId());
 
 							String path = endConnectorOccurrence.getLargeId() + "_"
 									+ endStecker.getConnectionPath(endPin.toString()) + "_" + name + "_RConn1";
 							if (system.getRelation(path) == null) {
 								system.addRelation(new SimulinkSubToSubRelation(endConnectorOccurrence.getLargeId(),
 										endStecker.getConnectionPath(endPin.toString()), name, "RConn1", system, 0));
-								Contact rightContactPoint = new Contact(endConnectorOccurrence.getLargeId(), endPin);
-								subsystem.setRightContactPoint(rightContactPoint);
+								Contact rightContactPoint = new Contact(endConnectorOccurrence.getLargeId(), endPin, 2);
+								subsystem.addContact(rightContactPoint);
+								
+								Contact startSteckerContactPoint = new Contact(endStecker.getName(), endPin, startPin);
+								startStecker.addContact(startSteckerContactPoint);
+								
+								Contact endSteckerContactPoint = new Contact(startStecker.getName(), startPin, endPin);
+								endStecker.addContact(endSteckerContactPoint);
+								
+								if (findGeneralWireOccurrence(generalWireOccurrences, connection.getId()) != null 
+										&& findGeneralWireOccurrence(generalWireOccurrences, connection.getId()).getWireNumber() != null) {
+									subsystem.setWireNumber(findGeneralWireOccurrence(generalWireOccurrences, connection.getId()).getWireNumber());										
+								}
+								
+								if (length != null) {
+									subsystem.setLength(length);								
+								}
+								if (crossSectionArea != null) {
+									subsystem.setCrossSectionArea(crossSectionArea);
+								}
 							}
 						}
 					}

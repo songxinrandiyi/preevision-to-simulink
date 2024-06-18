@@ -21,6 +21,10 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 	private String name;
 	private static int num = 1;
 	private SubsystemType type;
+	private Integer numOfPins = 0;
+	private Integer wireNumber = null;
+	Double length = null;
+	Double crossSectionArea = null;
 
 	private List<LConnection> inConnections = new ArrayList<>();
 	private List<RConnection> outConnections = new ArrayList<>();
@@ -29,26 +33,9 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 	private List<ISimulinkBlock> blockList = new ArrayList<>();
 	private List<ISimulinkRelation> relationList = new ArrayList<>();
 	private List<SimulinkSubsystem> subsystemList = new ArrayList<>();
-
-	private Contact leftContactPoint = null;
-	private Contact rightContactPoint = null;
-
-	public Contact getLeftContactPoint() {
-		return leftContactPoint;
-	}
-
-	public void setLeftContactPoint(Contact leftContactPoint) {
-		this.leftContactPoint = leftContactPoint;
-	}
-
-	public Contact getRightContactPoint() {
-		return rightContactPoint;
-	}
-
-	public void setRightContactPoint(Contact rightContactPoint) {
-		this.rightContactPoint = rightContactPoint;
-	}
-
+	private List<Contact> contactPoints = new ArrayList<>(); 
+	
+	
 	public SimulinkSubsystem(ISimulinkSystem parent, String name, SubsystemType type) {
 		this.parent = parent;
 		if (name == null) {
@@ -59,6 +46,80 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		num++;
 		this.type = type != null ? type : SubsystemType.STECKER;
 	}
+	
+	public Double getLength() {
+		return length;
+	}
+
+	public void setLength(Double length) {
+		this.length = length;
+	}
+
+	public Double getCrossSectionArea() {
+		return crossSectionArea;
+	}
+
+	public void setCrossSectionArea(Double crossSectionArea) {
+		this.crossSectionArea = crossSectionArea;
+	}
+
+	public Integer getWireNumber() {
+		return wireNumber;
+	}
+
+	public void setWireNumber(Integer wireNumber) {
+		this.wireNumber = wireNumber;
+	}	
+	
+    public Integer getNumOfPins() {
+		return numOfPins;
+	}
+
+	public void setNumOfPins(Integer numOfPins) {
+		this.numOfPins = numOfPins;
+	}
+	
+	public void addNumOfPins() {
+		this.numOfPins++;
+	}
+	
+	public List<Contact> getContactsByPinNumber(Integer pinNumberFrom) {
+	    if (pinNumberFrom == null) {
+	        throw new IllegalArgumentException("Pin number cannot be null");
+	    }
+	    return contactPoints.stream()
+	            .filter(contact -> pinNumberFrom.equals(contact.getPinNumberFrom()))
+	            .collect(Collectors.toList());
+	}
+
+	// Method to get the entire list of contacts
+    public List<Contact> getContactPoints() {
+        return new ArrayList<>(contactPoints); // Return a copy to protect the internal list
+    }
+
+    // Method to set the entire list of contacts
+    public void setContactPoints(List<Contact> contactPoints) {
+        if (contactPoints == null) {
+            throw new IllegalArgumentException("Contact list cannot be null");
+        }
+        this.contactPoints = new ArrayList<>(contactPoints); // Make a copy to protect the internal list
+    }
+	
+    // Method to add a contact
+    public void addContact(Contact contact) {
+        if (contact == null) {
+            throw new IllegalArgumentException("Contact cannot be null");
+        }
+        contactPoints.add(contact);
+    }
+    
+    // Method to remove the last contact
+    public void removeLastContact() {
+        if (contactPoints.isEmpty()) {
+            throw new IllegalStateException("No contacts to remove");
+        }
+        contactPoints.remove(contactPoints.size() - 1);
+    }
 
 	public ISimulinkSystem getParent() {
 		return parent;

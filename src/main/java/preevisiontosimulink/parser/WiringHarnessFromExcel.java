@@ -11,6 +11,7 @@ import preevisiontosimulink.proxy.relation.SimulinkRelation;
 import preevisiontosimulink.proxy.system.SimulinkSubsystem;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
 import preevisiontosimulink.proxy.system.SubsystemType;
+import preevisiontosimulink.util.CellUtils;
 
 import java.io.File;
 import java.io.FileInputStream;

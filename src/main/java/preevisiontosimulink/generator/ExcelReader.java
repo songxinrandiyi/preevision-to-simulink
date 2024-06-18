@@ -1,7 +1,9 @@
-package preevisiontosimulink.parser;
+package preevisiontosimulink.generator;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import preevisiontosimulink.util.CellUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;

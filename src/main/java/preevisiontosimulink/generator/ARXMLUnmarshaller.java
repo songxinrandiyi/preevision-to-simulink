@@ -1,4 +1,4 @@
-package preevisiontosimulink.parser;
+package preevisiontosimulink.generator;
 
 import javax.xml.bind.*;
 import javax.xml.transform.stream.StreamSource;

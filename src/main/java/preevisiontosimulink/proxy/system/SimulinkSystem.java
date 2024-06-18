@@ -1,5 +1,8 @@
 package preevisiontosimulink.proxy.system;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,6 +15,7 @@ import preevisiontosimulink.library.VoltageSensor;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
 import preevisiontosimulink.proxy.port.Contact;
 import preevisiontosimulink.proxy.relation.ISimulinkRelation;
+import preevisiontosimulink.util.StringUtil;
 
 public class SimulinkSystem implements ISimulinkSystem {
 	private ISimulinkSystem parent = null;
@@ -60,7 +64,9 @@ public class SimulinkSystem implements ISimulinkSystem {
 
 			// Generate the Simulink model for each subsystem in the subsystemList
 			for (SimulinkSubsystem subsystem : subsystemList) {
-				subsystem.generateModel(matlab);
+				if (subsystem.getContactPoints() != null && subsystem.getContactPoints().size() > 0) {
+					subsystem.generateModel(matlab);
+				}			
 			}
 
 			for (DCCurrentSource currentSource : getAllCurrentSourceBlocks()) {
@@ -83,11 +89,16 @@ public class SimulinkSystem implements ISimulinkSystem {
 
 			matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + name + "')");
 			
+			/*
 			for (SimulinkSubsystem subsystem : getSubsystemList(SubsystemType.KABEL)) {
-				Contact leftContactPoint = subsystem.getLeftContactPoint();
-				Contact rightContactPoint = subsystem.getRightContactPoint();
+				Contact leftContactPoint = subsystem.getContactPoints().get(0);
+				Contact rightContactPoint = subsystem.getContactPoints().get(1);
 				System.out.println("Contact Point: " + leftContactPoint + ", " + rightContactPoint);
+				System.out.println();
 			}
+			*/
+			
+			logInfo();
 
 			// Save the model
 			String modelFilePath = "" + name + ".slx";
@@ -101,6 +112,43 @@ public class SimulinkSystem implements ISimulinkSystem {
 			e.printStackTrace();
 		}
 	}
+	
+    public void logInfo() {
+        // Get the first part of the system's name
+        String firstPartOfSystemName = StringUtil.getFirstPart(this.name);
+        String logFileName = firstPartOfSystemName + "_log.txt";
+        StringBuilder logContent = new StringBuilder();
+
+        for (SimulinkSubsystem subsystem : getSubsystemList(SubsystemType.STECKER)) {
+            if (subsystem.getContactPoints() != null && subsystem.getContactPoints().size() > 0) {
+                System.out.println("Connector: " + subsystem.getName());
+                logContent.append("Connector: ").append(subsystem.getName()).append("\n");
+
+                for (int i = 1; i < subsystem.getNumOfPins() + 1; i++) {
+                    System.out.println("Pin " + i + " has number of contact points: " + subsystem.getContactsByPinNumber(i).size());
+                    logContent.append("Pin ").append(i).append(" has number of contact points: ")
+                              .append(subsystem.getContactsByPinNumber(i).size()).append("\n");
+
+                    for (Contact contact : subsystem.getContactsByPinNumber(i)) {
+                        System.out.println(contact.getName() + ", Pin " + contact.getPinNumberTo());
+                        logContent.append(contact.getName()).append(", Pin ").append(contact.getPinNumberTo()).append("\n");
+                    }
+                    System.out.println(); 
+                    logContent.append("\n");
+                }
+                System.out.println();
+                System.out.println();
+                logContent.append("\n\n");
+            }
+        }
+
+        // Write to file, overwriting if it exists
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(logFileName, false))) {
+            writer.write(logContent.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 	@Override
 	public List<ISimulinkBlock> getBlockList() {
@@ -174,10 +222,10 @@ public class SimulinkSystem implements ISimulinkSystem {
 	
     public SimulinkSubsystem findSubsystemWithContactPoints(Contact leftContactPoint, Contact rightContactPoint) {
         for (SimulinkSubsystem subsystem : getSubsystemList(SubsystemType.KABEL)) {
-            if (subsystem.getLeftContactPoint() != null && subsystem.getRightContactPoint() != null) {
-                if (subsystem.getLeftContactPoint().equals(leftContactPoint) && subsystem.getRightContactPoint().equals(rightContactPoint)) {
+            if (subsystem.getContactPoints().size() == 2) {
+                if (subsystem.getContactPoints().get(0).equals(leftContactPoint) && subsystem.getContactPoints().get(1).equals(rightContactPoint)) {
                     return subsystem;
-                } else if (subsystem.getLeftContactPoint().equals(rightContactPoint) && subsystem.getRightContactPoint().equals(leftContactPoint)) {
+                } else if (subsystem.getContactPoints().get(0).equals(rightContactPoint) && subsystem.getContactPoints().get(1).equals(leftContactPoint)) {
 					return subsystem;
 				}
             }

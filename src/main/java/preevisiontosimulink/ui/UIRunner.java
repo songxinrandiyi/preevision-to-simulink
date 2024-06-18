@@ -16,7 +16,9 @@ public class UIRunner {
     private static JLabel fileLabel;
     private static List<File> selectedFiles = new ArrayList<>();
     private static JComboBox<String> generatorComboBox;
-
+    private static JButton generateModelButton;
+    private static JButton generateExcelButton;
+    
     public static void main(String[] args) {
         JFrame frame = new JFrame("Simulink Model Generator");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -75,13 +77,28 @@ public class UIRunner {
         generatorComboBox.setBounds(140, 180, 300, 25);
         panel.add(generatorComboBox);
 
-        JButton runButton = new JButton("Generate");
-        runButton.setBounds(200, 220, 100, 25);
-        panel.add(runButton);
+        generateModelButton = new JButton("Generate Simulink Model");
+        generateModelButton.setBounds(140, 220, 150, 25);
+        panel.add(generateModelButton);
+        generateModelButton.setEnabled(false);
+
+        generateExcelButton = new JButton("Generate Excel");
+        generateExcelButton.setBounds(300, 220, 150, 25);
+        panel.add(generateExcelButton);
+        generateExcelButton.setEnabled(false);
 
         JLabel statusLabel = new JLabel("");
         statusLabel.setBounds(160, 260, 200, 25);
         panel.add(statusLabel);
+
+        // Listener to enable buttons based on input validation
+        SimpleDocumentListener validationListener = new SimpleDocumentListener() {
+            @Override
+            public void update() {
+                checkEnableGenerateButtons();
+            }
+        };
+        modelNameField.getDocument().addDocumentListener(validationListener);
 
         fileButton.addActionListener(new ActionListener() {
             @Override
@@ -102,14 +119,24 @@ public class UIRunner {
                     }
                     fileLabel.setText(fileNames.toString());
                     fileLabel.setToolTipText(fileNames.toString()); // Show the file names on hover
+                    checkEnableGenerateButtons();
                 }
             }
         });
 
-        runButton.addActionListener(new ActionListener() {
+        generateModelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String modelName = modelNameField.getText();
+                if (modelName.isEmpty() && !selectedFiles.isEmpty()) {
+                    for (File file : selectedFiles) {
+                        if (file.getName().endsWith(".kbl")) {
+                            modelName = file.getName().replace(".kbl", "");
+                            break;
+                        }
+                    }
+                }
+
                 String currentValueStr = currentValueField.getText();
                 Double currentValue = null;
                 if (!currentValueStr.isEmpty()) {
@@ -156,5 +183,62 @@ public class UIRunner {
                 statusLabel.setText("Simulink model generated.");
             }
         });
+
+        generateExcelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String modelName = modelNameField.getText();
+                if (modelName.isEmpty() && !selectedFiles.isEmpty()) {
+                    for (File file : selectedFiles) {
+                        if (file.getName().endsWith(".kbl")) {
+                            modelName = file.getName().replace(".kbl", "");
+                            break;
+                        }
+                    }
+                }
+
+                if (modelName.isEmpty() || selectedFiles.isEmpty()) {
+                    statusLabel.setText("Model name or files not selected.");
+                    return;
+                }
+
+                statusLabel.setText("Generating Excel...");
+
+                List<String> filePaths = new ArrayList<>();
+                for (File file : selectedFiles) {
+                    filePaths.add(file.getAbsolutePath());
+                }
+
+                WiringHarnessFromKBL wiringHarnessFromKBL = new WiringHarnessFromKBL(modelName, filePaths, null);
+                wiringHarnessFromKBL.generateExcel();
+
+                statusLabel.setText("Excel generated.");
+            }
+        });
+    }
+
+    private static void checkEnableGenerateButtons() {
+        boolean hasKBLFile = selectedFiles.stream().anyMatch(file -> file.getName().endsWith(".kbl"));
+        generateModelButton.setEnabled(hasKBLFile);
+        generateExcelButton.setEnabled(hasKBLFile);
+    }
+}
+
+abstract class SimpleDocumentListener implements javax.swing.event.DocumentListener {
+    public abstract void update();
+
+    @Override
+    public void insertUpdate(javax.swing.event.DocumentEvent e) {
+        update();
+    }
+
+    @Override
+    public void removeUpdate(javax.swing.event.DocumentEvent e) {
+        update();
+    }
+
+    @Override
+    public void changedUpdate(javax.swing.event.DocumentEvent e) {
+        update();
     }
 }

@@ -1,28 +1,38 @@
 package preevisiontosimulink.proxy.port;
 
 public class Contact {
-	private String connectorName;
-	private Integer pinNumber;
+	private String name;
+	private Integer pinNumberTo;
+	private Integer pinNumberFrom;
 
-	public String getConnectorName() {
-		return connectorName;
+	public Contact(String connectorName, Integer pinNumberTo, Integer pinNumberFrom) {
+		this.name = connectorName;
+		this.pinNumberTo = pinNumberTo;
+		this.pinNumberFrom = pinNumberFrom;
 	}
 
-	public void setConnectorName(String connectorName) {
-		this.connectorName = connectorName;
+	public String getName() {
+		return name;
 	}
 
-	public Integer getPinNumber() {
-		return pinNumber;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public void setPinNumber(Integer pinNumber) {
-		this.pinNumber = pinNumber;
+	public Integer getPinNumberTo() {
+		return pinNumberTo;
 	}
 
-	public Contact(String connectorName, Integer pinNumber) {
-		this.connectorName = connectorName;
-		this.pinNumber = pinNumber;
+	public void setPinNumberTo(Integer pinNumberTo) {
+		this.pinNumberTo = pinNumberTo;
+	}
+
+	public Integer getPinNumberFrom() {
+		return pinNumberFrom;
+	}
+
+	public void setPinNumberFrom(Integer pinNumberFrom) {
+		this.pinNumberFrom = pinNumberFrom;
 	}
 
 	@Override
@@ -34,23 +44,23 @@ public class Contact {
 
 		Contact that = (Contact) o;
 
-		if (!connectorName.equals(that.connectorName))
+		if (!name.equals(that.name))
 			return false;
-		return pinNumber.equals(that.pinNumber);
+		return pinNumberTo.equals(that.pinNumberTo);
 	}
 
 	@Override
 	public int hashCode() {
-		int result = connectorName.hashCode();
-		result = 31 * result + pinNumber.hashCode();
+		int result = name.hashCode();
+		result = 31 * result + pinNumberTo.hashCode();
 		return result;
 	}
 	
     @Override
     public String toString() {
         return "ContactPoint{" +
-                "connectorName='" + connectorName + '\'' +
-                ", pinNumber=" + pinNumber +
+                "connectorName='" + name + '\'' +
+                ", pinNumber=" + pinNumberTo +
                 '}';
     }
 }
