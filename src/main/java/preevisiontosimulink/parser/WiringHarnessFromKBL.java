@@ -602,6 +602,15 @@ public class WiringHarnessFromKBL {
 		}
 		return null; // If no corresponding CartesianPoint is found
 	}
+	
+	private Connection findConnection(List<Connection> connections, String id) {
+		for (Connection connection : connections) {
+			if (connection.getId().equals(id)) {
+				return connection;
+			}
+		}
+		return null; // If no corresponding CartesianPoint is found
+	}
 
 	private Integer getCavityNumberById(ConnectorHousing connectorHousing, String cavityId) {
 		if (connectorHousing == null || connectorHousing.getSlots() == null) {
@@ -621,6 +630,8 @@ public class WiringHarnessFromKBL {
 
 		return null; // Return null if the cavity with the given ID is not found
 	}
+	
+	
 
 	private GeneralWireOccurrence findGeneralWireOccurrence(List<GeneralWireOccurrence> generalWireOccurrences,
 			String id) {

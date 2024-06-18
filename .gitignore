@@ -3,6 +3,8 @@
 .project
 .settings/
 
+.metadata/
+
 # Maven target directory
 target/
 
@@ -11,6 +13,8 @@ slprj/
 lib/
 
 kbl/
+
+excel/
 
 # Ignore files with .slx extension
 *.slx
