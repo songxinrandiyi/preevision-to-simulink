@@ -3,6 +3,9 @@
 .project
 .settings/
 
+.apt_generated/
+.apt_generated_tests/
+
 .metadata/
 
 # Maven target directory
@@ -44,3 +47,5 @@ excel/
 
 
 
+/.apt_generated/
+/.apt_generated_tests/

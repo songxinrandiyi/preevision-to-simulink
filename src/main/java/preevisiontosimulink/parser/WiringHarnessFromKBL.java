@@ -4,7 +4,9 @@ import javax.xml.bind.*;
 import javax.xml.transform.stream.StreamSource;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -20,7 +22,10 @@ import preevisiontosimulink.proxy.relation.SimulinkSubToSubRelation;
 import preevisiontosimulink.proxy.system.SimulinkSubsystem;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
 import preevisiontosimulink.proxy.system.SubsystemType;
+import preevisiontosimulink.util.CalculatorUtils;
 import preevisiontosimulink.util.CellUtils;
+import preevisiontosimulink.util.KBLUtils;
+import preevisiontosimulink.util.StringUtil;
 import preevisiontosimulink.proxy.port.Contact;
 
 import java.io.File;
@@ -139,33 +144,54 @@ public class WiringHarnessFromKBL {
 	        }
 	    }
 	    
-        // Sortiere die Subsysteme nach dem Namen des ersten Kontaktpunkts, wenn dieser nicht null ist
-        Collections.sort(filteredSubsystems, new Comparator<SimulinkSubsystem>() {
-            @Override
-            public int compare(SimulinkSubsystem subsystem1, SimulinkSubsystem subsystem2) {
-                String name1 = subsystem1.getContactPoints().get(0).getName();
-                String name2 = subsystem2.getContactPoints().get(0).getName();
-                return name1.compareTo(name2);
-            }
-        });
+	    // Sort the subsystems by the name of the first contact point, and if the names are equal, by pinNumberTo
+	    Collections.sort(filteredSubsystems, new Comparator<SimulinkSubsystem>() {
+	        @Override
+	        public int compare(SimulinkSubsystem subsystem1, SimulinkSubsystem subsystem2) {
+	            Contact contact1 = subsystem1.getContactPoints().get(0);
+	            Contact contact2 = subsystem2.getContactPoints().get(0);
+
+	            // First, compare by name
+	            int nameComparison = contact1.getName().compareTo(contact2.getName());
+	            
+	            if (nameComparison != 0) {
+	                return nameComparison;
+	            }
+
+	            // If names are equal, compare by pinNumberTo
+	            return contact1.getPinNumberTo().compareTo(contact2.getPinNumberTo());
+	        }
+	    });
 
 	    // Create data rows
 	    for (int i = 1; i <= filteredSubsystems.size(); i++) {
 	        Row row = sheet.createRow(i);
 
 	        SimulinkSubsystem subsystem = filteredSubsystems.get(i - 1);
+	        
+	        if (subsystem.getWireNumber() != null) {
+	        	row.createCell(0).setCellValue(subsystem.getWireNumber());
+	        }
 	        row.createCell(2).setCellValue(subsystem.getContactPoints().get(0).getName());
+	        row.createCell(3).setCellValue(subsystem.getContactPoints().get(0).getPinNumberTo());
             row.createCell(11).setCellValue(subsystem.getContactPoints().get(1).getName());
+            row.createCell(12).setCellValue(subsystem.getContactPoints().get(1).getPinNumberTo());
             if (subsystem.getCrossSectionArea() != null) {
             	row.createCell(20).setCellValue(subsystem.getCrossSectionArea());
+            	row.createCell(8).setCellValue(subsystem.getCrossSectionArea()*6);
+            	row.createCell(17).setCellValue(subsystem.getCrossSectionArea()*6);
             }
             if (subsystem.getLength() != null) {
             	row.createCell(21).setCellValue(subsystem.getLength());
             }
+            if (subsystem.getSignalName() != null) {
+            	row.createCell(4).setCellValue(subsystem.getSignalName());
+            	row.createCell(13).setCellValue(subsystem.getSignalName());
+            }
 	    }
 
 	    // Resize columns to fit the content
-	    for (int i = 0; i < 24; i++) {
+	    for (int i = 0; i <= 24; i++) {
 	        sheet.autoSizeColumn(i);
 	    }
 
@@ -181,6 +207,175 @@ public class WiringHarnessFromKBL {
 	        } catch (IOException e) {
 	            e.printStackTrace();
 	        }
+	    }
+	}
+	
+	public void generateUpdatedExcel() {
+		
+	    // Create a Workbook
+	    Workbook workbook = new XSSFWorkbook(); // .xlsx format
+	    // Workbook workbook = new HSSFWorkbook(); // .xls format
+
+	    // Create a Sheet
+	    Sheet sheet = workbook.createSheet(modelName);
+
+	    // Create a Row for header
+	    Row headerRow = sheet.createRow(0);
+	    
+	    // Create a cell style with left alignment
+	    CellStyle leftAlignStyle = workbook.createCellStyle();
+	    leftAlignStyle.setAlignment(HorizontalAlignment.LEFT);
+
+	    // Create header cells
+	    headerRow.createCell(0).setCellValue("Wire");
+	    headerRow.createCell(1).setCellValue("Typical current");
+	    headerRow.createCell(2).setCellValue("Max Peak Current");
+	    headerRow.createCell(3).setCellValue("Max Peak Current Duration");
+	    headerRow.createCell(4).setCellValue("WireConnector1");
+	    headerRow.createCell(5).setCellValue("Pinnummer1");
+	    headerRow.createCell(6).setCellValue("WireConnector2");
+	    headerRow.createCell(7).setCellValue("Pinnummer2");
+	    headerRow.createCell(8).setCellValue("Schematic Pin");
+	    headerRow.createCell(9).setCellValue("Ø");
+	    headerRow.createCell(10).setCellValue("Wire Length");
+	    headerRow.createCell(11).setCellValue("Voltage Drop with 1A");
+
+	    List<SimulinkSubsystem> subsystems = system.getSubsystemList(SubsystemType.KABEL);
+	    
+	    List<SimulinkSubsystem> filteredSubsystems = new ArrayList<>();
+
+	    for (SimulinkSubsystem subsystem : subsystems) {
+	        if (subsystem.getContactPoints() != null && subsystem.getContactPoints().size() == 2) {
+	            filteredSubsystems.add(subsystem);
+	        }
+	    }
+	    
+	    // Sort the subsystems by the name of the first contact point, and if the names are equal, by pinNumberTo
+	    Collections.sort(filteredSubsystems, new Comparator<SimulinkSubsystem>() {
+	        @Override
+	        public int compare(SimulinkSubsystem subsystem1, SimulinkSubsystem subsystem2) {
+	            Contact contact1 = subsystem1.getContactPoints().get(0);
+	            Contact contact2 = subsystem2.getContactPoints().get(0);
+
+	            // First, compare by name
+	            int nameComparison = contact1.getName().compareTo(contact2.getName());
+	            
+	            if (nameComparison != 0) {
+	                return nameComparison;
+	            }
+
+	            // If names are equal, compare by pinNumberTo
+	            return contact1.getPinNumberTo().compareTo(contact2.getPinNumberTo());
+	        }
+	    });
+
+	    // Create data rows
+	    for (int i = 1; i <= filteredSubsystems.size(); i++) {
+	        Row row = sheet.createRow(i);
+
+	        SimulinkSubsystem subsystem = filteredSubsystems.get(i - 1);
+	        
+	        if (subsystem.getWireNumber() != null) {
+	        	row.createCell(0).setCellValue(subsystem.getWireNumber());
+	        }
+	        row.createCell(4).setCellValue(subsystem.getContactPoints().get(0).getName());
+	        Cell cell5 = row.createCell(5);
+	        cell5.setCellValue(subsystem.getContactPoints().get(0).getPinNumberTo());
+	        cell5.setCellStyle(leftAlignStyle);
+            row.createCell(6).setCellValue(subsystem.getContactPoints().get(1).getName());
+            Cell cell7 = row.createCell(7);
+            cell7.setCellStyle(leftAlignStyle);
+            cell7.setCellValue(subsystem.getContactPoints().get(1).getPinNumberTo());
+            if (subsystem.getCrossSectionArea() != null) {
+            	row.createCell(9).setCellValue(subsystem.getCrossSectionArea());
+            }
+            if (subsystem.getLength() != null) {
+            	row.createCell(10).setCellValue(subsystem.getLength());
+            }
+            if (subsystem.getCrossSectionArea() != null && subsystem.getLength()!= null) {
+            	double voltageDrop = 1*CalculatorUtils.calculateResistance(subsystem.getLength(), subsystem.getCrossSectionArea());
+            	row.createCell(11).setCellValue(voltageDrop);
+            }
+            if (subsystem.getSignalName() != null) {
+            	row.createCell(8).setCellValue(subsystem.getSignalName());
+            }
+	    }
+
+	    // Resize columns to fit the content
+	    for (int i = 0; i <= 11; i++) {
+	        sheet.autoSizeColumn(i);
+	    }
+
+	    // Write the output to a file
+	    try (FileOutputStream fileOut = new FileOutputStream(modelName + "_1.xlsx")) {
+	        workbook.write(fileOut);
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    } finally {
+	        // Closing the workbook
+	        try {
+	            workbook.close();
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	}
+	
+	public void generateModifiedKBL(Sheet sheet) {
+		int rowBegin = 1; // Start from the second row
+		for (int i = rowBegin; i <= sheet.getLastRowNum(); i++) {
+			Row row = sheet.getRow(i);
+
+			if (row == null) {
+				continue; // Skip if row is null
+			}
+			Cell connector1 = row.getCell(2);
+	        Cell pinnummer1 = row.getCell(3);
+	        Cell connector2 = row.getCell(11);
+	        Cell pinnummer2 = row.getCell(12);
+	        Cell currentValue = row.getCell(7);
+	        
+	        String connectorName1 = null;
+	        String connectorName2 = null;
+	        Integer pin1 = null;
+	        Integer pin2 = null;
+	        Double current = null;
+	        
+	        Boolean notBlank = pinnummer1.getCellType() != CellType.BLANK && pinnummer2.getCellType() != CellType.BLANK 
+	        		&& connector1.getCellType() != CellType.BLANK && connector2.getCellType() != CellType.BLANK
+	        		&& currentValue.getCellType() != CellType.BLANK;
+
+            if (notBlank) {
+            	connectorName1 = connector1.getStringCellValue();
+                pin1 = CellUtils.getIntegerValueFromCell(pinnummer1);
+                if (pin1 == null) {
+					pin1 = 1;
+				}
+                
+                Contact leftContact = new Contact(connectorName1, pin1, 1);
+
+				connectorName2 = connector2.getStringCellValue();
+                pin2 = CellUtils.getIntegerValueFromCell(pinnummer2);
+				if (pin2 == null) {
+					pin2 = 1;
+				}
+                
+				Contact rightContact = new Contact(connectorName2, pin2, 2);	
+								
+                current = CellUtils.getNumericValueFromCell(currentValue);
+				if (current == null) {
+					current = 0.05;
+				}
+				
+				SimulinkSubsystem subsystem = system.findSubsystemWithContactPoints(leftContact, rightContact);
+				
+				if (subsystem != null) {
+					ISimulinkBlock block = subsystem.getBlock("I");
+					block.setParameter("i0", current);
+				}
+            } 
+
+	        System.out.println();
 	    }
 	}
 	
@@ -272,14 +467,14 @@ public class WiringHarnessFromKBL {
 
 	private void generateBlocksAndConnections() {
 		for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
-			ConnectorHousing connectorHousing = findConnectorHousing(connectorHousings, connectorOccurrence.getPart());
+			ConnectorHousing connectorHousing = KBLUtils.findConnectorHousing(connectorHousings, connectorOccurrence.getPart());
 
 			if (system.getSubsystem(connectorOccurrence.getLargeId()) == null) {
 				system.addSubsystem(
 						new SimulinkSubsystem(system, connectorOccurrence.getLargeId(), SubsystemType.STECKER));
 				List<Cavity> cavities = connectorOccurrence.getSlots().getCavities();
 				for (Cavity cavity : cavities) {
-					Integer cavityNumber = getCavityNumberById(connectorHousing, cavity.getPart());
+					Integer cavityNumber = KBLUtils.getCavityNumberById(connectorHousing, cavity.getPart());
 
 					SimulinkSubsystem subsystem = system.getSubsystem(connectorOccurrence.getLargeId());
 					subsystem.addInConnection(new LConnection(subsystem, cavityNumber.toString()));
@@ -328,6 +523,7 @@ public class WiringHarnessFromKBL {
 			Extremity endExtremity = null;
 			ConnectorOccurrence endConnectorOccurrence = null;
 			ConnectorOccurrence startConnectorOccurrence = null;
+			GeneralWireOccurrence generalWireOccurrence = null;
 			
 			SimulinkSubsystem endStecker = null;
 			SimulinkSubsystem startStecker = null;
@@ -344,20 +540,19 @@ public class WiringHarnessFromKBL {
 				}
 			}
 
-			if (startExtremity != null && endExtremity != null) {
-				GeneralWireOccurrence generalWireOccurrence = null;
+			if (startExtremity != null && endExtremity != null) {				
 				if (connection.getWire() != null) {
-					generalWireOccurrence = findGeneralWireOccurrence(generalWireOccurrences,
+					generalWireOccurrence = KBLUtils.findGeneralWireOccurrence(generalWireOccurrences,
 							connection.getWire());
 				} 
 				
 				if (generalWireOccurrence != null && generalWireOccurrence.getLengthInformation() != null) {
 					length = generalWireOccurrence.getLengthInformation().get(0).getLengthValue().getValueComponent();
-					GeneralWire generalWire = findGeneralWire(generalWires, generalWireOccurrence.getPart());
+					GeneralWire generalWire = KBLUtils.findGeneralWire(generalWires, generalWireOccurrence.getPart());
 					if (generalWire != null && length != null) {
 						crossSectionArea = generalWire.getCrossSectionArea().getValueComponent();
 						if (crossSectionArea != null) {
-							resistance = calculateResistance(length, crossSectionArea);
+							resistance = CalculatorUtils.calculateResistance(length, crossSectionArea);
 							int lengthInt = (int) Math.round(length);
 							name += "_" + crossSectionArea + "_" + lengthInt;
 						}					
@@ -369,7 +564,7 @@ public class WiringHarnessFromKBL {
 				}
 				
 				if (system.getSubsystem(name) != null) {
-					name = generateUniqueName(system, name);
+					name = StringUtil.generateUniqueName(system, name);
 				}
 
 				if (system.getSubsystem(name) == null) {
@@ -418,65 +613,78 @@ public class WiringHarnessFromKBL {
 							new SimulinkRelation(converter.getOutPort(0), display.getInPort(0), subsystem));
 				}
 
-				if (startExtremity != null && startExtremity.getContactPoint() != null) {
-					startConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences,
+				if (startExtremity.getContactPoint() != null && endExtremity.getContactPoint() != null) {
+					startConnectorOccurrence = KBLUtils.findConnectorOccurrenceWithContactPoint(connectorOccurrences,
 							startExtremity.getContactPoint());
 					if (startConnectorOccurrence != null) {
-						ConnectorHousing startConnectorHousing = findConnectorHousing(connectorHousings,
+						ConnectorHousing startConnectorHousing = KBLUtils.findConnectorHousing(connectorHousings,
 								startConnectorOccurrence.getPart());
 						if (startConnectorHousing != null) {
-							startPin = findPinNumWithContactPointId(startConnectorOccurrence, startConnectorHousing,
+							startPin = KBLUtils.findPinNumWithContactPointId(startConnectorOccurrence, startConnectorHousing,
 									startExtremity.getContactPoint());
 							startStecker = system.getSubsystem(startConnectorOccurrence.getLargeId());
-
-							String path = startConnectorOccurrence.getLargeId() + "_"
-									+ startStecker.getConnectionPath(startPin.toString()) + "_" + name + "_LConn1";
-							if (system.getRelation(path) == null) {
-								system.addRelation(new SimulinkSubToSubRelation(startConnectorOccurrence.getLargeId(),
-										startStecker.getConnectionPath(startPin.toString()), name, "LConn1", system, 0));
-								Contact leftContactPoint = new Contact(startConnectorOccurrence.getLargeId(), startPin, 1);
-								subsystem.addContact(leftContactPoint);
+							
+							if (startPin != null) {
+								String path = startConnectorOccurrence.getLargeId() + "_"
+										+ startStecker.getConnectionPath(startPin.toString()) + "_" + name + "_LConn1";
+								if (system.getRelation(path) == null) {
+									system.addRelation(new SimulinkSubToSubRelation(startConnectorOccurrence.getLargeId(),
+											startStecker.getConnectionPath(startPin.toString()), name, "LConn1", system, 0));
+									Contact leftContactPoint = new Contact(startConnectorOccurrence.getLargeId(), startPin, 1);
+									subsystem.addContact(leftContactPoint);
+								}
 							}
 						}
 					}
-				}
-
-				if (endExtremity != null && endExtremity.getContactPoint() != null) {
-					endConnectorOccurrence = findConnectorOccurrenceWithContactPoint(connectorOccurrences,
+					
+					
+					endConnectorOccurrence = KBLUtils.findConnectorOccurrenceWithContactPoint(connectorOccurrences,
 							endExtremity.getContactPoint());
 					if (endConnectorOccurrence != null) {
-						ConnectorHousing endConnectorHousing = findConnectorHousing(connectorHousings,
+						ConnectorHousing endConnectorHousing = KBLUtils.findConnectorHousing(connectorHousings,
 								endConnectorOccurrence.getPart());
 						if (endConnectorHousing != null) {
 
-							endPin = findPinNumWithContactPointId(endConnectorOccurrence, endConnectorHousing,
+							endPin = KBLUtils.findPinNumWithContactPointId(endConnectorOccurrence, endConnectorHousing,
 									endExtremity.getContactPoint());
 							endStecker = system.getSubsystem(endConnectorOccurrence.getLargeId());
 
-							String path = endConnectorOccurrence.getLargeId() + "_"
-									+ endStecker.getConnectionPath(endPin.toString()) + "_" + name + "_RConn1";
-							if (system.getRelation(path) == null) {
-								system.addRelation(new SimulinkSubToSubRelation(endConnectorOccurrence.getLargeId(),
-										endStecker.getConnectionPath(endPin.toString()), name, "RConn1", system, 0));
-								Contact rightContactPoint = new Contact(endConnectorOccurrence.getLargeId(), endPin, 2);
-								subsystem.addContact(rightContactPoint);
-								
-								Contact startSteckerContactPoint = new Contact(endStecker.getName(), endPin, startPin);
-								startStecker.addContact(startSteckerContactPoint);
-								
-								Contact endSteckerContactPoint = new Contact(startStecker.getName(), startPin, endPin);
-								endStecker.addContact(endSteckerContactPoint);
-								
-								if (findGeneralWireOccurrence(generalWireOccurrences, connection.getId()) != null 
-										&& findGeneralWireOccurrence(generalWireOccurrences, connection.getId()).getWireNumber() != null) {
-									subsystem.setWireNumber(findGeneralWireOccurrence(generalWireOccurrences, connection.getId()).getWireNumber());										
-								}
-								
-								if (length != null) {
-									subsystem.setLength(length);								
-								}
-								if (crossSectionArea != null) {
-									subsystem.setCrossSectionArea(crossSectionArea);
+							if (endPin != null && startPin != null) {
+								String path = endConnectorOccurrence.getLargeId() + "_"
+										+ endStecker.getConnectionPath(endPin.toString()) + "_" + name + "_RConn1";
+								if (system.getRelation(path) == null) {
+									system.addRelation(new SimulinkSubToSubRelation(endConnectorOccurrence.getLargeId(),
+											endStecker.getConnectionPath(endPin.toString()), name, "RConn1", system, 0));
+									Contact rightContactPoint = new Contact(endConnectorOccurrence.getLargeId(), endPin, 2);
+									subsystem.addContact(rightContactPoint);
+									
+									Contact startSteckerContactPoint = new Contact(endStecker.getName(), endPin, startPin);
+									startStecker.addContact(startSteckerContactPoint);
+									
+									Contact endSteckerContactPoint = new Contact(startStecker.getName(), startPin, endPin);
+									endStecker.addContact(endSteckerContactPoint);
+									
+									if (generalWireOccurrence != null && generalWireOccurrence.getWireNumber() != null) {
+										if (generalWireOccurrence.getWireNumber() != null) {
+											subsystem.setWireNumber(generalWireOccurrence.getWireNumber());	
+										}								
+										if (generalWireOccurrence.getId() != null) {
+											subsystem.setGeneralWireOccurrenceId(generalWireOccurrence.getId());
+										}
+										if (generalWireOccurrence.getPart() != null) {
+                                            subsystem.setGeneralWireId(name);
+                                        }
+									}
+									
+									if (length != null) {
+										subsystem.setLength(length);								
+									}
+									if (crossSectionArea != null) {
+										subsystem.setCrossSectionArea(crossSectionArea);
+									}
+									if (connection.getSignalName() != null) {
+										subsystem.setSignalName(connection.getSignalName());
+									}
 								}
 							}
 						}
@@ -485,192 +693,4 @@ public class WiringHarnessFromKBL {
 			}
 		}
 	}
-
-	private GeneralWire findGeneralWire(List<GeneralWire> generalWires, String id) {
-		if (generalWires != null) {
-			for (GeneralWire generalWire : generalWires) {
-				if (generalWire.getId().equals(id)) {
-					return generalWire;
-				}
-			}
-		}
-
-		return null; // If no corresponding CartesianPoint is found
-	}
-
-	private ConnectorHousing findConnectorHousing(List<ConnectorHousing> connectorHousings, String id) {
-		if (connectorHousings != null) {
-			for (ConnectorHousing connectorHousing : connectorHousings) {
-				if (connectorHousing.getId().equals(id)) {
-					return connectorHousing;
-				}
-			}
-		}
-
-		return null; // If no corresponding CartesianPoint is found
-	}
-
-	private ConnectorOccurrence findConnectorOccurrenceWithContactPoint(List<ConnectorOccurrence> connectorOccurrences,
-			String id) {
-		if (connectorOccurrences != null) {
-			for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
-				List<ContactPoint> contactPoints = connectorOccurrence.getContactPoints();
-				if (contactPoints != null) {
-					for (ContactPoint contactPoint : contactPoints) {
-						if (contactPoint.getId().equals(id)) {
-							return connectorOccurrence;
-						}
-					}
-				}
-			}
-		}
-
-		return null; // If no corresponding CartesianPoint is found
-	}
-
-	private Integer findPinNumWithContactPointId(ConnectorOccurrence connectorOccurrence,
-			ConnectorHousing connectorHousing, String id) {
-		if (connectorOccurrence != null && connectorHousing != null) {
-			List<ContactPoint> contactPoints = connectorOccurrence.getContactPoints();
-			ContactPoint contactPoint = null;
-			Cavity cavityInConnectorOccurrence = null;
-			Cavity cavityInConnectorHousing = null;
-			for (ContactPoint contact : contactPoints) {
-				if (contact.getId().equals(id)) {
-					contactPoint = contact;
-				}
-			}
-			if (contactPoint == null) {
-				return null;
-			}
-			cavityInConnectorOccurrence = findCavityInConnectorOccurrence(connectorOccurrence,
-					contactPoint.getContactedCavity());
-			cavityInConnectorHousing = findCavityInConnectorHousing(connectorHousing,
-					cavityInConnectorOccurrence.getPart());
-			if (cavityInConnectorHousing != null) {
-				return cavityInConnectorHousing.getCavityNumber();
-			} else {
-				return null;
-			}
-		} else {
-			return null;
-		}
-	}
-
-	private Cavity findCavityInConnectorOccurrence(ConnectorOccurrence connectorOccurrence, String id) {
-		if (connectorOccurrence != null) {
-			List<Cavity> cavities = connectorOccurrence.getSlots().getCavities();
-			for (Cavity cavity : cavities) {
-				if (cavity.getId().equals(id)) {
-					return cavity;
-				}
-			}
-		}
-
-		return null; // If no corresponding CartesianPoint is found
-	}
-
-	private Cavity findCavityInConnectorHousing(ConnectorHousing connectorHousing, String id) {
-		if (connectorHousing == null || connectorHousing.getSlots() == null) {
-			return null;
-		}
-		
-		List<Cavity> cavities = connectorHousing.getSlots().getCavities();
-		for (Cavity cavity : cavities) {
-			if (cavity.getId().equals(id)) {
-				return cavity;
-			}
-		}
-		return null; // If no corresponding CartesianPoint is found
-	}
-
-	private ConnectorOccurrence findConnectorOccurrence(List<ConnectorOccurrence> connectorOccurrences,
-			String largeId) {
-		for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
-			if (connectorOccurrence.getLargeId().equals(largeId)) {
-				return connectorOccurrence;
-			}
-		}
-		return null; // If no corresponding CartesianPoint is found
-	}
-
-	private Node findNode(List<Node> nodes, String id) {
-		for (Node node : nodes) {
-			if (node.getId().equals(id)) {
-				return node;
-			}
-		}
-		return null; // If no corresponding CartesianPoint is found
-	}
-	
-	private Connection findConnection(List<Connection> connections, String id) {
-		for (Connection connection : connections) {
-			if (connection.getId().equals(id)) {
-				return connection;
-			}
-		}
-		return null; // If no corresponding CartesianPoint is found
-	}
-
-	private Integer getCavityNumberById(ConnectorHousing connectorHousing, String cavityId) {
-		if (connectorHousing == null || connectorHousing.getSlots() == null) {
-			return null;
-		}
-
-		Slots slots = connectorHousing.getSlots();
-		List<Cavity> cavities = slots.getCavities();
-
-		if (cavities != null) {
-			for (Cavity cavity : cavities) {
-				if (cavityId.equals(cavity.getId())) {
-					return cavity.getCavityNumber();
-				}
-			}
-		}
-
-		return null; // Return null if the cavity with the given ID is not found
-	}
-	
-	
-
-	private GeneralWireOccurrence findGeneralWireOccurrence(List<GeneralWireOccurrence> generalWireOccurrences,
-			String id) {
-		if (generalWireOccurrences == null) {
-			return null;
-		}
-		for (GeneralWireOccurrence generalWireOccurrence : generalWireOccurrences) {
-			if (generalWireOccurrence.getId().equals(id)) {
-				return generalWireOccurrence;
-			}
-		}
-		return null; // If no corresponding CartesianPoint is found
-	}
-
-	private double calculateResistance(double length, double crossSectionalArea) {
-		// Convert cross-sectional area from mm² to m² (1 mm² = 1e-6 m²)
-		double crossSectionalAreaM2 = crossSectionalArea * 1e-6;
-
-		// Convert length from mm to meters (1 mm = 1e-3 m)
-		double lengthM = length * 1e-3;
-
-		// Calculate and return resistance using the formula R = ρ * (L / A)
-		return 1.77e-8 * (lengthM / crossSectionalAreaM2);
-	}
-	
-    // Recursive method to generate a unique name
-    private String generateUniqueName(SimulinkSystem system, String name) {
-        if (system.getSubsystem(name) != null) {
-            // If the name exists, append or increment the suffix and try again
-            int suffix = 1;
-            String newName;
-            do {
-                newName = name + "_" + suffix;
-                suffix++;
-            } while (system.getSubsystem(newName) != null);
-            return generateUniqueName(system, newName);
-        } else {
-            // If the name is unique, return it
-            return name;
-        }
-    }
 }

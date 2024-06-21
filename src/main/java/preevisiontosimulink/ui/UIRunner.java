@@ -1,6 +1,8 @@
 package preevisiontosimulink.ui;
 
 import preevisiontosimulink.parser.*;
+import preevisiontosimulink.util.StringUtil;
+import preevisiontosimulink.proxy.system.SimulinkSystem;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,9 +20,10 @@ public class UIRunner {
     private static JComboBox<String> generatorComboBox;
     private static JButton generateModelButton;
     private static JButton generateExcelButton;
-    
+    private static JButton clearFilesButton; // New button to clear selected files
+
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Simulink Model Generator");
+        JFrame frame = new JFrame("KBL Parser");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(500, 350);
 
@@ -36,7 +39,7 @@ public class UIRunner {
     private static void placeComponents(JPanel panel) {
         panel.setLayout(null);
 
-        JLabel titleLabel = new JLabel("Simulink Model Generator");
+        JLabel titleLabel = new JLabel("KBL Parser");
         titleLabel.setBounds(160, 20, 200, 25);
         panel.add(titleLabel);
 
@@ -64,8 +67,12 @@ public class UIRunner {
         fileButton.setBounds(140, 140, 100, 25);
         panel.add(fileButton);
 
+        clearFilesButton = new JButton("Clear Files"); // New button
+        clearFilesButton.setBounds(250, 140, 100, 25); // Positioning the button directly to the right of "Browse" button
+        panel.add(clearFilesButton);
+
         fileLabel = new JLabel("");
-        fileLabel.setBounds(250, 140, 200, 25);
+        fileLabel.setBounds(360, 140, 200, 25);
         panel.add(fileLabel);
 
         JLabel generatorLabel = new JLabel("Generator:");
@@ -124,16 +131,34 @@ public class UIRunner {
             }
         });
 
+        clearFilesButton.addActionListener(new ActionListener() { // Action listener for clear button
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                selectedFiles.clear();
+                fileLabel.setText("");
+                checkEnableGenerateButtons();
+            }
+        });
+
         generateModelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String modelName = modelNameField.getText();
                 if (modelName.isEmpty() && !selectedFiles.isEmpty()) {
+                    // Get first part of the name of the first two selected KBL files
+                    List<String> fileNameParts = new ArrayList<>();
                     for (File file : selectedFiles) {
                         if (file.getName().endsWith(".kbl")) {
-                            modelName = file.getName().replace(".kbl", "");
-                            break;
+                            fileNameParts.add(StringUtil.getFirstPart(file.getName()));
+                            if (fileNameParts.size() == 2) {
+                                break; // We only need the first two KBL files
+                            }
                         }
+                    }
+                    if (fileNameParts.size() == 2) {
+                        modelName = fileNameParts.get(0) + "_" + fileNameParts.get(1);
+                    } else if (!fileNameParts.isEmpty()) {
+                        modelName = fileNameParts.get(0);
                     }
                 }
 
@@ -166,6 +191,7 @@ public class UIRunner {
                     filePaths.add(file.getAbsolutePath());
                 }
 
+                SimulinkSystem system = new SimulinkSystem(modelName);
                 switch (selectedGenerator) {
                     case "Wiring Harness From KBL":
                         WiringHarnessFromKBL wiringHarnessFromKBL = new WiringHarnessFromKBL(modelName, filePaths, currentValue);
@@ -179,8 +205,15 @@ public class UIRunner {
                         statusLabel.setText("Unknown generator selected.");
                         return;
                 }
-
                 statusLabel.setText("Simulink model generated.");
+                
+                // Use a Timer to clear the status label after 2 seconds
+                new javax.swing.Timer(2000, new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent evt) {
+                        statusLabel.setText("");
+                    }
+                }).start();
             }
         });
 
@@ -189,11 +222,22 @@ public class UIRunner {
             public void actionPerformed(ActionEvent e) {
                 String modelName = modelNameField.getText();
                 if (modelName.isEmpty() && !selectedFiles.isEmpty()) {
+                    // Get first part of the name of the first two selected KBL files
+                    List<String> fileNameCombined = new ArrayList<>();
+                    String fileName = null;
                     for (File file : selectedFiles) {
                         if (file.getName().endsWith(".kbl")) {
-                            modelName = file.getName().replace(".kbl", "");
-                            break;
+                        	fileName = StringUtil.removeEnding(file.getName());
+                            fileNameCombined.add(StringUtil.getFirstPart(file.getName()));
+                            if (fileNameCombined.size() == 2) {
+                                break; // We only need the first two KBL files
+                            }
                         }
+                    }
+                    if (fileNameCombined.size() == 2) {
+                        modelName = fileNameCombined.get(0) + "_" + fileNameCombined.get(1);
+                    } else {
+                        modelName = fileName;
                     }
                 }
 
@@ -211,8 +255,17 @@ public class UIRunner {
 
                 WiringHarnessFromKBL wiringHarnessFromKBL = new WiringHarnessFromKBL(modelName, filePaths, null);
                 wiringHarnessFromKBL.generateExcel();
+                wiringHarnessFromKBL.generateUpdatedExcel();
 
                 statusLabel.setText("Excel generated.");
+                
+                // Use a Timer to clear the status label after 2 seconds
+                new javax.swing.Timer(2000, new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent evt) {
+                        statusLabel.setText("");
+                    }
+                }).start();
             }
         });
     }
