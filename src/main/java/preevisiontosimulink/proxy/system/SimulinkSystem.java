@@ -15,7 +15,7 @@ import preevisiontosimulink.library.VoltageSensor;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
 import preevisiontosimulink.proxy.port.Contact;
 import preevisiontosimulink.proxy.relation.ISimulinkRelation;
-import preevisiontosimulink.util.StringUtil;
+import preevisiontosimulink.util.StringUtils;
 
 public class SimulinkSystem implements ISimulinkSystem {
 	private ISimulinkSystem parent = null;
@@ -115,7 +115,7 @@ public class SimulinkSystem implements ISimulinkSystem {
 	
     public void logInfo() {
         // Get the first part of the system's name
-        String firstPartOfSystemName = StringUtil.getFirstPart(this.name);
+        String firstPartOfSystemName = StringUtils.getFirstPart(this.name);
         String logFileName = firstPartOfSystemName + "_log.txt";
         StringBuilder logContent = new StringBuilder();
 

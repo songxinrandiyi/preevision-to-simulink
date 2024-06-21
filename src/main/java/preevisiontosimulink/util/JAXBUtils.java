@@ -12,7 +12,7 @@ import preevisiontosimulink.parser.kblelements.GeneralWireOccurrence;
 import preevisiontosimulink.parser.kblelements.Node;
 import preevisiontosimulink.parser.kblelements.Slots;
 
-public class KBLUtils {
+public class JAXBUtils {
 	public static GeneralWireOccurrence findGeneralWireOccurrence(List<GeneralWireOccurrence> generalWireOccurrences,
 			String id) {
 		if (generalWireOccurrences == null) {

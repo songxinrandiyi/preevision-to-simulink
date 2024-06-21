@@ -1,7 +1,7 @@
 package preevisiontosimulink.ui;
 
 import preevisiontosimulink.parser.*;
-import preevisiontosimulink.util.StringUtil;
+import preevisiontosimulink.util.StringUtils;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
 
 import javax.swing.*;
@@ -20,12 +20,13 @@ public class UIRunner {
     private static JComboBox<String> generatorComboBox;
     private static JButton generateModelButton;
     private static JButton generateExcelButton;
+    private static JButton generateModifiedKBLButton; // New button
     private static JButton clearFilesButton; // New button to clear selected files
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("KBL Parser");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(500, 350);
+        frame.setSize(600, 400); // Increase the size to ensure components fit well
 
         JPanel panel = new JPanel();
         frame.add(panel);
@@ -93,9 +94,14 @@ public class UIRunner {
         generateExcelButton.setBounds(300, 220, 150, 25);
         panel.add(generateExcelButton);
         generateExcelButton.setEnabled(false);
+        
+        generateModifiedKBLButton = new JButton("Generate Modified KBL"); // New button
+        generateModifiedKBLButton.setBounds(140, 260, 310, 25); // Positioning the button
+        panel.add(generateModifiedKBLButton);
+        generateModifiedKBLButton.setEnabled(false);
 
         JLabel statusLabel = new JLabel("");
-        statusLabel.setBounds(160, 260, 200, 25);
+        statusLabel.setBounds(160, 300, 200, 25); // Adjust Y position to avoid overlapping with other components
         panel.add(statusLabel);
 
         // Listener to enable buttons based on input validation
@@ -149,7 +155,7 @@ public class UIRunner {
                     List<String> fileNameParts = new ArrayList<>();
                     for (File file : selectedFiles) {
                         if (file.getName().endsWith(".kbl")) {
-                            fileNameParts.add(StringUtil.getFirstPart(file.getName()));
+                            fileNameParts.add(StringUtils.getFirstPart(file.getName()));
                             if (fileNameParts.size() == 2) {
                                 break; // We only need the first two KBL files
                             }
@@ -227,8 +233,8 @@ public class UIRunner {
                     String fileName = null;
                     for (File file : selectedFiles) {
                         if (file.getName().endsWith(".kbl")) {
-                        	fileName = StringUtil.removeEnding(file.getName());
-                            fileNameCombined.add(StringUtil.getFirstPart(file.getName()));
+                        	fileName = StringUtils.removeEnding(file.getName());
+                            fileNameCombined.add(StringUtils.getFirstPart(file.getName()));
                             if (fileNameCombined.size() == 2) {
                                 break; // We only need the first two KBL files
                             }
@@ -268,12 +274,48 @@ public class UIRunner {
                 }).start();
             }
         });
+        
+        generateModifiedKBLButton.addActionListener(new ActionListener() { // New action listener
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String modelName = modelNameField.getText();
+                if (modelName.isEmpty()) {
+                    for (File file : selectedFiles) {
+                        if (file.getName().endsWith(".kbl")) {
+                        	modelName = StringUtils.removeEnding(file.getName());
+                        	break;
+                        }
+                    }
+                }
+
+                List<String> filePaths = new ArrayList<>();
+                for (File file : selectedFiles) {
+                    filePaths.add(file.getAbsolutePath());
+                }
+
+                WiringHarnessFromKBL wiringHarnessFromKBL = new WiringHarnessFromKBL(modelName, filePaths, null);
+                wiringHarnessFromKBL.generateModifiedKBL();
+                statusLabel.setText("Modified KBL generated.");
+
+                // Use a Timer to clear the status label after 2 seconds
+                new javax.swing.Timer(2000, new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent evt) {
+                        statusLabel.setText("");
+                    }
+                }).start();
+            }
+        });
     }
 
     private static void checkEnableGenerateButtons() {
         boolean hasKBLFile = selectedFiles.stream().anyMatch(file -> file.getName().endsWith(".kbl"));
+        boolean oneKBLFile = selectedFiles.stream().filter(file -> file.getName().endsWith(".kbl")).count() == 1;
+        boolean oneExcelFile = selectedFiles.stream().filter(file -> file.getName().endsWith(".xlsx")).count() == 1;
+
         generateModelButton.setEnabled(hasKBLFile);
         generateExcelButton.setEnabled(hasKBLFile);
+        generateModifiedKBLButton.setEnabled(oneKBLFile && oneExcelFile); // Enable the new button
     }
 }
 

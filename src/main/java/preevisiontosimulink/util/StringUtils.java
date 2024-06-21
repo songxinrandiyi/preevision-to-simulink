@@ -2,7 +2,7 @@ package preevisiontosimulink.util;
 
 import preevisiontosimulink.proxy.system.SimulinkSystem;
 
-public class StringUtil {
+public class StringUtils {
 
     /**
      * Extracts the first part of a string separated by an underscore.
