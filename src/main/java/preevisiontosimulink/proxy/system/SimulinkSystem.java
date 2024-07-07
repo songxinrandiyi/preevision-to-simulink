@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.mathworks.engine.*;
+import com.mathworks.engine.MatlabEngine;
 
 import preevisiontosimulink.library.DCCurrentSource;
 import preevisiontosimulink.library.Resistor;

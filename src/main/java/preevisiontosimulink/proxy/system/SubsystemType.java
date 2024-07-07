@@ -1,5 +1,5 @@
 package preevisiontosimulink.proxy.system;
 
 public enum SubsystemType {
-	STECKER, KABEL
+	STECKER, KABEL, KABEL_TEMPERATUR
 }

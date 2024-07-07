@@ -6,6 +6,5 @@
 )
 package preevisiontosimulink.parser.kblelements;
 
-import javax.xml.bind.annotation.XmlSchema;
 import javax.xml.bind.annotation.XmlNs;
-import javax.xml.bind.annotation.XmlNsForm;
+import javax.xml.bind.annotation.XmlSchema;

@@ -1,6 +1,16 @@
 package preevisiontosimulink.parser;
 
-import org.apache.poi.ss.usermodel.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import preevisiontosimulink.library.LConnection;
@@ -13,18 +23,12 @@ import preevisiontosimulink.proxy.system.SimulinkSystem;
 import preevisiontosimulink.proxy.system.SubsystemType;
 import preevisiontosimulink.util.CellUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-public class WiringHarnessFromExcel {
+public class ExcelParser {
 	private SimulinkSystem system;
 	private String modelName;
 	private List<String> filePaths = new ArrayList<>();
 
-	public WiringHarnessFromExcel(String modelName, List<String> filePaths) {
+	public ExcelParser(String modelName, List<String> filePaths) {
 		this.modelName = modelName;
 		this.filePaths = filePaths;
 	}

@@ -6,13 +6,19 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.mathworks.engine.*;
+import com.mathworks.engine.MatlabEngine;
 
-import preevisiontosimulink.library.*;
+import preevisiontosimulink.library.DCCurrentSource;
+import preevisiontosimulink.library.InPort;
+import preevisiontosimulink.library.LConnection;
+import preevisiontosimulink.library.OutPort;
+import preevisiontosimulink.library.RConnection;
+import preevisiontosimulink.library.Resistor;
+import preevisiontosimulink.library.VoltageSensor;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
 import preevisiontosimulink.proxy.port.Contact;
-import preevisiontosimulink.proxy.port.SimulinkPort;
 import preevisiontosimulink.proxy.relation.ISimulinkRelation;
+import preevisiontosimulink.util.KBLInformation;
 
 public class SimulinkSubsystem implements ISimulinkSystem {
 	private static final String BLOCK_NAME = "Subsystem";
@@ -22,17 +28,12 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 	private static int num = 1;
 	private SubsystemType type;
 	private Integer numOfPins = 0;
-	private Integer wireNumber = null;
-	private String generalWireOccurrenceId = null;
-	private String generalWireId = null;
-	private Double length = null;
-	private Double crossSectionArea = null;
-	private String signalName = null;
+	private KBLInformation kblInformation = new KBLInformation();
 
 	private List<LConnection> inConnections = new ArrayList<>();
 	private List<RConnection> outConnections = new ArrayList<>();
-	private List<Inport> inPorts = new ArrayList<>();
-	private List<Outport> outPorts = new ArrayList<>();
+	private List<InPort> inPorts = new ArrayList<>();
+	private List<OutPort> outPorts = new ArrayList<>();
 	private List<ISimulinkBlock> blockList = new ArrayList<>();
 	private List<ISimulinkRelation> relationList = new ArrayList<>();
 	private List<SimulinkSubsystem> subsystemList = new ArrayList<>();
@@ -50,57 +51,15 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		this.type = type != null ? type : SubsystemType.STECKER;
 	}
 	
-	public String getGeneralWireId() {
-		return generalWireId;
+    public KBLInformation getKblInformation() {
+		return kblInformation;
 	}
 
-	public void setGeneralWireId(String generalWireId) {
-		this.generalWireId = generalWireId;
+	public void setKblInformation(KBLInformation kblInformation) {
+		this.kblInformation = kblInformation;
 	}
 
-	public String getGeneralWireOccurrenceId() {
-		return generalWireOccurrenceId;
-	}
-
-
-	public void setGeneralWireOccurrenceId(String generalWireOccurrenceId) {
-		this.generalWireOccurrenceId = generalWireOccurrenceId;
-	}
-
-
-	public String getSignalName() {
-		return signalName;
-	}
-
-	public void setSignalName(String signalName) {
-		this.signalName = signalName;
-	}
-
-	public Double getLength() {
-		return length;
-	}
-
-	public void setLength(Double length) {
-		this.length = length;
-	}
-
-	public Double getCrossSectionArea() {
-		return crossSectionArea;
-	}
-
-	public void setCrossSectionArea(Double crossSectionArea) {
-		this.crossSectionArea = crossSectionArea;
-	}
-
-	public Integer getWireNumber() {
-		return wireNumber;
-	}
-
-	public void setWireNumber(Integer wireNumber) {
-		this.wireNumber = wireNumber;
-	}	
-	
-    public Integer getNumOfPins() {
+	public Integer getNumOfPins() {
 		return numOfPins;
 	}
 
@@ -154,17 +113,17 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		return parent;
 	}
 
-	public Inport addInPort(Inport port) {
+	public InPort addInPort(InPort port) {
 		inPorts.add(port);
 		return port;
 	}
 
-	public Inport getInPort(int index) {
+	public InPort getInPort(int index) {
 		return inPorts.get(index);
 	}
 
-	public Inport getInPort(String name) {
-		for (Inport port : inPorts) {
+	public InPort getInPort(String name) {
+		for (InPort port : inPorts) {
 			if (port.getName().equals(name)) {
 				return port;
 			}
@@ -183,21 +142,21 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		return -1; // or throw new IllegalArgumentException("Input port not found: " + name);
 	}
 
-	public List<Inport> getInPorts() {
+	public List<InPort> getInPorts() {
 		return inPorts;
 	}
 
-	public Outport addOutPort(Outport port) {
+	public OutPort addOutPort(OutPort port) {
 		outPorts.add(port);
 		return port;
 	}
 
-	public Outport getOutPort(int index) {
+	public OutPort getOutPort(int index) {
 		return outPorts.get(index);
 	}
 
-	public Outport getOutPort(String name) {
-		for (Outport port : outPorts) {
+	public OutPort getOutPort(String name) {
+		for (OutPort port : outPorts) {
 			if (port.getName().equals(name)) {
 				return port;
 			}
@@ -216,7 +175,7 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		return -1; // or throw new IllegalArgumentException("Input port not found: " + name);
 	}
 
-	public List<Outport> getOutPorts() {
+	public List<OutPort> getOutPorts() {
 		return outPorts;
 	}
 
@@ -377,12 +336,12 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 			}
 
 			// Generate the Simulink model for each port in the inPorts
-			for (Inport port : inPorts) {
+			for (InPort port : inPorts) {
 				port.generateModel(matlab);
 			}
 
 			// Generate the Simulink model for each port in the outPorts
-			for (Outport port : outPorts) {
+			for (OutPort port : outPorts) {
 				port.generateModel(matlab);
 			}
 
@@ -393,7 +352,7 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 					matlab.eval("pos = get_param(h,'Position')");
 					matlab.eval("pos1 = [pos(1)+100 pos(2)-15 pos(3)+100 pos(4)]");
 					matlab.eval("pos2 = [pos1(1)+70 pos1(2)-70 pos1(3)+70 pos1(4)-70]");
-					matlab.eval("pos3 = [pos2(1)+100 pos2(2)-15 pos2(3)+150 pos2(4)]");
+					matlab.eval("pos3 = [pos2(1)+100 pos2(2)-10 pos2(3)+120 pos2(4)+10]");
 					matlab.eval("set_param('" + combinedPath + "/" + inConnections.get(0).getName()
 							+ "_I', 'Position', pos1)");
 					matlab.eval("set_param('" + combinedPath + "/" + inConnections.get(0).getName()
@@ -406,12 +365,11 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 						matlab.eval("pos = [pos(1) pos(2)+200 pos(3) pos(4)+200]");
 						matlab.eval("pos1 = [pos(1)+100 pos(2)-15 pos(3)+100 pos(4)]");
 						matlab.eval("pos2 = [pos1(1)+70 pos1(2)-70 pos1(3)+70 pos1(4)-70]");
-						matlab.eval("pos3 = [pos2(1)+100 pos2(2)-15 pos2(3)+150 pos2(4)]");
+						matlab.eval("pos3 = [pos2(1)+100 pos2(2)-10 pos2(3)+120 pos2(4)+10]");
 						matlab.eval("set_param('" + combinedPath + "/" + port.getName() + "', 'Position', pos)");
 						matlab.eval("set_param('" + combinedPath + "/" + port.getName() + "_I', 'Position', pos1)");
 						matlab.eval("set_param('" + combinedPath + "/" + port.getName() + "_PS', 'Position', pos2)");
-						matlab.eval(
-								"set_param('" + combinedPath + "/" + port.getName() + "_Display', 'Position', pos3)");
+						matlab.eval("set_param('" + combinedPath + "/" + port.getName() + "_Display', 'Position', pos3)");
 					}
 
 					if (getBlock(name + "_E") != null) {
@@ -432,10 +390,10 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 				matlab.eval("pos3 = [pos(1)+200 pos(2) pos(3)+200 pos(4)]");
 				matlab.eval("pos4 = [pos3(1) pos3(2)-100 pos3(3) pos3(4)-80]");
 				matlab.eval("pos5 = [pos4(1)+100 pos4(2)+10 pos4(3)+100 pos4(4)-10]");
-				matlab.eval("pos6 = [pos5(1)+100 pos5(2)-10 pos5(3)+200 pos5(4)+10]");
+				matlab.eval("pos6 = [pos5(1)+100 pos5(2)-10 pos5(3)+120 pos5(4)+10]");
 
 				matlab.eval("set_param('" + combinedPath + "/" + outPort.getName() + "', 'Position', pos1)");
-				matlab.eval("set_param('" + combinedPath + "/" + "I', 'Position', pos2)");
+				//matlab.eval("set_param('" + combinedPath + "/" + "I', 'Position', pos2)");
 				matlab.eval("set_param('" + combinedPath + "/" + "R', 'Position', pos3)");
 				matlab.eval("set_param('" + combinedPath + "/" + "U', 'Position', pos4)");
 				matlab.eval("set_param('" + combinedPath + "/" + "PS', 'Position', pos5)");

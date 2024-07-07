@@ -1,12 +1,10 @@
-package preevisiontosimulink.generator;
+package preevisiontosimulink.samples;
 
-import java.util.List;
-
-import preevisiontosimulink.library.*;
-import preevisiontosimulink.proxy.block.ISimulinkBlock;
-import preevisiontosimulink.proxy.relation.SimulinkExternRelation;
+import preevisiontosimulink.library.DCVoltageSource;
+import preevisiontosimulink.library.ElectricalReference;
+import preevisiontosimulink.library.Resistor;
+import preevisiontosimulink.library.SolverConfiguration;
 import preevisiontosimulink.proxy.relation.SimulinkRelation;
-import preevisiontosimulink.proxy.system.SimulinkSubsystem;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
 
 public class ModelGenerator {

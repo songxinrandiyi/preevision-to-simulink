@@ -1,10 +1,13 @@
-package preevisiontosimulink.generator;
+package preevisiontosimulink.samples;
 
 import java.util.List;
 
-import com.mathworks.engine.MatlabEngine;
-
-import preevisiontosimulink.library.*;
+import preevisiontosimulink.library.Add;
+import preevisiontosimulink.library.Gain;
+import preevisiontosimulink.library.InPort;
+import preevisiontosimulink.library.OutPort;
+import preevisiontosimulink.library.Scope;
+import preevisiontosimulink.library.SineWave;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
 import preevisiontosimulink.proxy.relation.SimulinkExternRelation;
 import preevisiontosimulink.proxy.relation.SimulinkRelation;
@@ -44,9 +47,9 @@ public class ModelGenerator2 {
 		lastSubsystem.addBlock(new Gain(lastSubsystem, "Gain1"));
 		lastSubsystem.addBlock(new Gain(lastSubsystem, "Gain2"));
 		lastSubsystem.addBlock(new Add(lastSubsystem, "Add1"));
-		lastSubsystem.addInPort(new Inport(lastSubsystem, "Inport1"));
-		lastSubsystem.addInPort(new Inport(lastSubsystem, "Inport2"));
-		lastSubsystem.addOutPort(new Outport(lastSubsystem, "Outport1"));
+		lastSubsystem.addInPort(new InPort(lastSubsystem, "Inport1"));
+		lastSubsystem.addInPort(new InPort(lastSubsystem, "Inport2"));
+		lastSubsystem.addOutPort(new OutPort(lastSubsystem, "Outport1"));
 
 		system.getBlock("Sine1").setParameter("Amplitude", 10);
 		system.getBlock("Sine2").setParameter("Amplitude", 5);

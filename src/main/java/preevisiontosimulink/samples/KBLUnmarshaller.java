@@ -1,12 +1,19 @@
-package preevisiontosimulink.generator;
-
-import javax.xml.bind.*;
-import javax.xml.transform.stream.StreamSource;
-
-import preevisiontosimulink.parser.kblelements.*;
+package preevisiontosimulink.samples;
 
 import java.io.File;
 import java.util.List;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
+
+import preevisiontosimulink.parser.kblelements.CartesianPoint;
+import preevisiontosimulink.parser.kblelements.CoreOccurrence;
+import preevisiontosimulink.parser.kblelements.GeneralWireOccurrence;
+import preevisiontosimulink.parser.kblelements.Harness;
+import preevisiontosimulink.parser.kblelements.KBLContainer;
 
 public class KBLUnmarshaller {
 	public static void main(String[] args) {

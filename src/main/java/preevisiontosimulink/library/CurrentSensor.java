@@ -1,8 +1,6 @@
 package preevisiontosimulink.library;
 
-import preevisiontosimulink.proxy.*;
 import preevisiontosimulink.proxy.block.SimulinkBlock;
-import preevisiontosimulink.proxy.block.SimulinkParameter;
 import preevisiontosimulink.proxy.port.LConnectionPort;
 import preevisiontosimulink.proxy.port.RConnectionPort;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;

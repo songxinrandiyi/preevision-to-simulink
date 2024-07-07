@@ -11,6 +11,8 @@
 # Maven target directory
 target/
 
+simulink/
+
 slprj/
 
 lib/

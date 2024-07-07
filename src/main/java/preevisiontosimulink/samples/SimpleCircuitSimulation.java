@@ -1,6 +1,6 @@
-package preevisiontosimulink.generator;
+package preevisiontosimulink.samples;
 
-import com.mathworks.engine.*;
+import com.mathworks.engine.MatlabEngine;
 
 public class SimpleCircuitSimulation {
 	public static void main(String[] args) {

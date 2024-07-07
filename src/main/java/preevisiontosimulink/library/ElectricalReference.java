@@ -1,8 +1,5 @@
 package preevisiontosimulink.library;
 
-import java.util.ArrayList;
-import com.mathworks.engine.*;
-import preevisiontosimulink.proxy.*;
 import preevisiontosimulink.proxy.block.SimulinkBlock;
 import preevisiontosimulink.proxy.port.LConnectionPort;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;

@@ -1,12 +1,17 @@
-package preevisiontosimulink.generator;
-
-import javax.xml.bind.*;
-import javax.xml.transform.stream.StreamSource;
-
-import preevisiontosimulink.parser.arxmlelements.*;
+package preevisiontosimulink.samples;
 
 import java.io.File;
 import java.util.List;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
+
+import preevisiontosimulink.parser.arxmlelements.AUTOSAR;
+import preevisiontosimulink.parser.arxmlelements.ArPackage;
+import preevisiontosimulink.parser.arxmlelements.ArPackages;
 
 public class ARXMLUnmarshaller {
 

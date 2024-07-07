@@ -4,7 +4,6 @@ import com.mathworks.engine.MatlabEngine;
 
 import preevisiontosimulink.proxy.port.ISimulinkPort;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
-import preevisiontosimulink.proxy.system.SimulinkSubsystem;
 
 public class SimulinkExternRelation implements ISimulinkRelation {
 	private ISimulinkPort outPort;
