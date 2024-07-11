@@ -1,8 +1,6 @@
 package preevisiontosimulink.proxy.system;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,10 +13,11 @@ import preevisiontosimulink.library.OutPort;
 import preevisiontosimulink.library.RConnection;
 import preevisiontosimulink.library.Resistor;
 import preevisiontosimulink.library.VoltageSensor;
+import preevisiontosimulink.pojo.KabelInformation;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
 import preevisiontosimulink.proxy.port.Contact;
 import preevisiontosimulink.proxy.relation.ISimulinkRelation;
-import preevisiontosimulink.util.KBLInformation;
+import preevisiontosimulink.util.SimulinkSubsystemHelper;
 
 public class SimulinkSubsystem implements ISimulinkSystem {
 	private static final String BLOCK_NAME = "Subsystem";
@@ -26,9 +25,9 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 	private ISimulinkSystem parent;
 	private String name;
 	private static int num = 1;
-	private SubsystemType type;
+	private SimulinkSubsystemType type;
 	private Integer numOfPins = 0;
-	private KBLInformation kblInformation = new KBLInformation();
+	private KabelInformation kblInformation = new KabelInformation();
 
 	private List<LConnection> inConnections = new ArrayList<>();
 	private List<RConnection> outConnections = new ArrayList<>();
@@ -37,10 +36,9 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 	private List<ISimulinkBlock> blockList = new ArrayList<>();
 	private List<ISimulinkRelation> relationList = new ArrayList<>();
 	private List<SimulinkSubsystem> subsystemList = new ArrayList<>();
-	private List<Contact> contactPoints = new ArrayList<>(); 
-	
-	
-	public SimulinkSubsystem(ISimulinkSystem parent, String name, SubsystemType type) {
+	private List<Contact> contactPoints = new ArrayList<>();
+
+	public SimulinkSubsystem(ISimulinkSystem parent, String name, SimulinkSubsystemType type) {
 		this.parent = parent;
 		if (name == null) {
 			this.name = BLOCK_NAME + num;
@@ -48,14 +46,14 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 			this.name = name;
 		}
 		num++;
-		this.type = type != null ? type : SubsystemType.STECKER;
+		this.type = type != null ? type : SimulinkSubsystemType.STECKER;
 	}
-	
-    public KBLInformation getKblInformation() {
+
+	public KabelInformation getKabelInformation() {
 		return kblInformation;
 	}
 
-	public void setKblInformation(KBLInformation kblInformation) {
+	public void setKabelInformation(KabelInformation kblInformation) {
 		this.kblInformation = kblInformation;
 	}
 
@@ -66,48 +64,47 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 	public void setNumOfPins(Integer numOfPins) {
 		this.numOfPins = numOfPins;
 	}
-	
+
 	public void addNumOfPins() {
 		this.numOfPins++;
 	}
-	
+
 	public List<Contact> getContactsByPinNumber(Integer pinNumberFrom) {
-	    if (pinNumberFrom == null) {
-	        throw new IllegalArgumentException("Pin number cannot be null");
-	    }
-	    return contactPoints.stream()
-	            .filter(contact -> pinNumberFrom.equals(contact.getPinNumberFrom()))
-	            .collect(Collectors.toList());
+		if (pinNumberFrom == null) {
+			throw new IllegalArgumentException("Pin number cannot be null");
+		}
+		return contactPoints.stream().filter(contact -> pinNumberFrom.equals(contact.getPinNumberFrom()))
+				.collect(Collectors.toList());
 	}
 
 	// Method to get the entire list of contacts
-    public List<Contact> getContactPoints() {
-        return new ArrayList<>(contactPoints); // Return a copy to protect the internal list
-    }
+	public List<Contact> getContactPoints() {
+		return new ArrayList<>(contactPoints); // Return a copy to protect the internal list
+	}
 
-    // Method to set the entire list of contacts
-    public void setContactPoints(List<Contact> contactPoints) {
-        if (contactPoints == null) {
-            throw new IllegalArgumentException("Contact list cannot be null");
-        }
-        this.contactPoints = new ArrayList<>(contactPoints); // Make a copy to protect the internal list
-    }
-	
-    // Method to add a contact
-    public void addContact(Contact contact) {
-        if (contact == null) {
-            throw new IllegalArgumentException("Contact cannot be null");
-        }
-        contactPoints.add(contact);
-    }
-    
-    // Method to remove the last contact
-    public void removeLastContact() {
-        if (contactPoints.isEmpty()) {
-            throw new IllegalStateException("No contacts to remove");
-        }
-        contactPoints.remove(contactPoints.size() - 1);
-    }
+	// Method to set the entire list of contacts
+	public void setContactPoints(List<Contact> contactPoints) {
+		if (contactPoints == null) {
+			throw new IllegalArgumentException("Contact list cannot be null");
+		}
+		this.contactPoints = new ArrayList<>(contactPoints); // Make a copy to protect the internal list
+	}
+
+	// Method to add a contact
+	public void addContact(Contact contact) {
+		if (contact == null) {
+			throw new IllegalArgumentException("Contact cannot be null");
+		}
+		contactPoints.add(contact);
+	}
+
+	// Method to remove the last contact
+	public void removeLastContact() {
+		if (contactPoints.isEmpty()) {
+			throw new IllegalStateException("No contacts to remove");
+		}
+		contactPoints.remove(contactPoints.size() - 1);
+	}
 
 	public ISimulinkSystem getParent() {
 		return parent;
@@ -300,7 +297,7 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 
 	public void generateModel(MatlabEngine matlab) {
 		try {
-			String combinedPath = generateCombinedPath();
+			String combinedPath = SimulinkSubsystemHelper.generateCombinedPath(parent, name);
 
 			matlab.eval("add_block('" + BLOCK_PATH + "', '" + combinedPath + "')");
 			matlab.eval("delete_line('" + combinedPath + "','In1/1','Out1/1')");
@@ -311,13 +308,11 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 			for (SimulinkSubsystem subsystem : subsystemList) {
 				subsystem.generateModel(matlab);
 			}
-
-			for (DCCurrentSource currentSource : getAllCurrentSourceBlocks()) {
-				currentSource.setParameter("Orientation", "Left");
-			}
-
-			for (VoltageSensor voltageSensor : getAllVoltageSensorBlocks()) {
-				voltageSensor.setParameter("Orientation", "Right");
+			
+			if (this.type == SimulinkSubsystemType.STECKER) {
+				for (VoltageSensor voltageSensor : getAllVoltageSensorBlocks()) {
+					voltageSensor.setParameter("Orientation", "Right");
+				}
 			}
 
 			// Generate the Simulink model for each block in the blockList
@@ -345,59 +340,17 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 				port.generateModel(matlab);
 			}
 
-			if (this.type == SubsystemType.STECKER) {
-				if (inConnections != null && inConnections.size() > 0) {
-					matlab.eval("h = getSimulinkBlockHandle('" + combinedPath + "/" + inConnections.get(0).getName()
-							+ "')");
-					matlab.eval("pos = get_param(h,'Position')");
-					matlab.eval("pos1 = [pos(1)+100 pos(2)-15 pos(3)+100 pos(4)]");
-					matlab.eval("pos2 = [pos1(1)+70 pos1(2)-70 pos1(3)+70 pos1(4)-70]");
-					matlab.eval("pos3 = [pos2(1)+100 pos2(2)-10 pos2(3)+120 pos2(4)+10]");
-					matlab.eval("set_param('" + combinedPath + "/" + inConnections.get(0).getName()
-							+ "_I', 'Position', pos1)");
-					matlab.eval("set_param('" + combinedPath + "/" + inConnections.get(0).getName()
-							+ "_PS', 'Position', pos2)");
-					matlab.eval("set_param('" + combinedPath + "/" + inConnections.get(0).getName()
-							+ "_Display', 'Position', pos3)");
-
-					for (int i = 1; i < inConnections.size(); i++) {
-						LConnection port = inConnections.get(i);
-						matlab.eval("pos = [pos(1) pos(2)+200 pos(3) pos(4)+200]");
-						matlab.eval("pos1 = [pos(1)+100 pos(2)-15 pos(3)+100 pos(4)]");
-						matlab.eval("pos2 = [pos1(1)+70 pos1(2)-70 pos1(3)+70 pos1(4)-70]");
-						matlab.eval("pos3 = [pos2(1)+100 pos2(2)-10 pos2(3)+120 pos2(4)+10]");
-						matlab.eval("set_param('" + combinedPath + "/" + port.getName() + "', 'Position', pos)");
-						matlab.eval("set_param('" + combinedPath + "/" + port.getName() + "_I', 'Position', pos1)");
-						matlab.eval("set_param('" + combinedPath + "/" + port.getName() + "_PS', 'Position', pos2)");
-						matlab.eval("set_param('" + combinedPath + "/" + port.getName() + "_Display', 'Position', pos3)");
-					}
-
-					if (getBlock(name + "_E") != null) {
-						matlab.eval("pos = [pos(1)+700 pos(2)+100 pos(3)+700 pos(4)+100]");
-						matlab.eval("set_param('" + combinedPath + "/" + name + "_E', 'Position', pos)");
-					}
-				}
-			}
-
-			if (this.type == SubsystemType.KABEL) {
-				LConnection inPort = inConnections.get(0);
-				RConnection outPort = outConnections.get(0);
-
-				matlab.eval("h = getSimulinkBlockHandle('" + combinedPath + "/" + inPort.getName() + "')");
-				matlab.eval("pos = get_param(h,'Position')");
-				matlab.eval("pos1 = [pos(1)+700 pos(2) pos(3)+700 pos(4)]");
-				matlab.eval("pos2 = [pos(1)+100 pos(2)-12 pos(3)+115 pos(4)+12]");
-				matlab.eval("pos3 = [pos(1)+200 pos(2) pos(3)+200 pos(4)]");
-				matlab.eval("pos4 = [pos3(1) pos3(2)-100 pos3(3) pos3(4)-80]");
-				matlab.eval("pos5 = [pos4(1)+100 pos4(2)+10 pos4(3)+100 pos4(4)-10]");
-				matlab.eval("pos6 = [pos5(1)+100 pos5(2)-10 pos5(3)+120 pos5(4)+10]");
-
-				matlab.eval("set_param('" + combinedPath + "/" + outPort.getName() + "', 'Position', pos1)");
-				//matlab.eval("set_param('" + combinedPath + "/" + "I', 'Position', pos2)");
-				matlab.eval("set_param('" + combinedPath + "/" + "R', 'Position', pos3)");
-				matlab.eval("set_param('" + combinedPath + "/" + "U', 'Position', pos4)");
-				matlab.eval("set_param('" + combinedPath + "/" + "PS', 'Position', pos5)");
-				matlab.eval("set_param('" + combinedPath + "/" + "Display', 'Position', pos6)");
+			switch (this.type) {
+			    case STECKER:
+			        SimulinkSubsystemHelper.arrangeSteckerType(matlab, inConnections, combinedPath, name);
+			        break;
+			    case KABEL:
+			        SimulinkSubsystemHelper.arrangeKabelType(matlab, inConnections, outConnections, combinedPath);
+			        break;
+			    // Add other cases if there are more types in SimulinkSubsystemType
+			    default:
+			        // Handle unexpected types if necessary
+			        break;
 			}
 
 			// Generate the Simulink model for each relation in the relationList
@@ -405,7 +358,9 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 				relation.generateModel(matlab);
 			}
 
-			matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + combinedPath + "')");
+			if (this.type != SimulinkSubsystemType.KABEL) {
+				matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + combinedPath + "')");
+			}
 
 			System.out.println("Simulink subsystem generated: " + combinedPath);
 		} catch (Exception e) {
@@ -413,11 +368,11 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		}
 	}
 
-	public SubsystemType getType() {
+	public SimulinkSubsystemType getType() {
 		return type;
 	}
 
-	public void setType(SubsystemType type) {
+	public void setType(SimulinkSubsystemType type) {
 		this.type = type;
 	}
 
@@ -431,19 +386,10 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		return relationList;
 	}
 
+	@Override
 	public SimulinkSubsystem addSubsystem(SimulinkSubsystem subsystem) {
 		subsystemList.add(subsystem);
 		return subsystem;
-	}
-
-	public String generateCombinedPath() {
-		StringBuilder pathBuilder = new StringBuilder(name);
-		ISimulinkSystem currentParent = parent;
-		while (currentParent != null) {
-			pathBuilder.insert(0, currentParent.getName() + "/");
-			currentParent = currentParent.getParent();
-		}
-		return pathBuilder.toString();
 	}
 
 	@Override
@@ -472,76 +418,6 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 		return null;
 	}
 
-	private int extractNumber(String name) {
-		String[] parts = name.split("_");
-		return Integer.parseInt(parts[0]);
-	}
-
-	public void reorderConnectionsForExcel() {
-		// Reorder inConnections
-		Collections.sort(inConnections, new Comparator<LConnection>() {
-			@Override
-			public int compare(LConnection c1, LConnection c2) {
-				return extractNumber(c1.getName()) - extractNumber(c2.getName());
-			}
-		});
-
-		// Reorder outConnections
-		Collections.sort(outConnections, new Comparator<RConnection>() {
-			@Override
-			public int compare(RConnection c1, RConnection c2) {
-				return extractNumber(c1.getName()) - extractNumber(c2.getName());
-			}
-		});
-	}
-
-	public void reorderConnectionsRecursivelyForExcel(SimulinkSubsystem subsystem) {
-		// Reorder connections for the current subsystem
-		subsystem.reorderConnectionsForExcel();
-
-		// Reorder connections for each child subsystem
-		for (SimulinkSubsystem childSubsystem : subsystem.getSubsystemList(SubsystemType.KABEL)) {
-			reorderConnectionsRecursivelyForExcel(childSubsystem);
-		}
-	}
-
-	public void reorderConnectionsForKBL() {
-		// Reorder inConnections
-		Collections.sort(inConnections, new Comparator<LConnection>() {
-			@Override
-			public int compare(LConnection c1, LConnection c2) {
-				return convertStringToInt(c1.getName()) - convertStringToInt(c2.getName());
-			}
-		});
-
-		// Reorder outConnections
-		Collections.sort(outConnections, new Comparator<RConnection>() {
-			@Override
-			public int compare(RConnection c1, RConnection c2) {
-				return convertStringToInt(c1.getName()) - convertStringToInt(c2.getName());
-			}
-		});
-	}
-
-	public void reorderConnectionsRecursivelyForKBL(SimulinkSubsystem subsystem) {
-		// Reorder connections for the current subsystem
-		subsystem.reorderConnectionsForKBL();
-
-		// Reorder connections for each child subsystem
-		for (SimulinkSubsystem childSubsystem : subsystem.getSubsystemList(SubsystemType.KABEL)) {
-			reorderConnectionsRecursivelyForKBL(childSubsystem);
-		}
-	}
-
-	private int convertStringToInt(String str) {
-		try {
-			return Integer.parseInt(str);
-		} catch (NumberFormatException e) {
-			System.out.println("Invalid string format for an integer: " + str);
-			return 0; // Return a default value, e.g., 0
-		}
-	}
-
 	@Override
 	public List<Resistor> getAllResistorBlocks() {
 		return blockList.stream().filter(block -> block instanceof Resistor).map(block -> (Resistor) block)
@@ -561,7 +437,7 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 	}
 
 	@Override
-	public List<SimulinkSubsystem> getSubsystemList(SubsystemType type) {
+	public List<SimulinkSubsystem> getSubsystemList(SimulinkSubsystemType type) {
 		return subsystemList.stream().filter(subsystem -> subsystem.getType() == type).collect(Collectors.toList());
 	}
 

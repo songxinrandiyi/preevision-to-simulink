@@ -14,7 +14,7 @@ public class CrossSectionArea {
 	private String unitComponent;
 
 	@XmlElement(name = "Value_component")
-	private double valueComponent;
+	private Double valueComponent;
 
 	// Getters and setters
 	public String getId() {
@@ -33,7 +33,7 @@ public class CrossSectionArea {
 		this.unitComponent = unitComponent;
 	}
 
-	public double getValueComponent() {
+	public Double getValueComponent() {
 		return valueComponent;
 	}
 

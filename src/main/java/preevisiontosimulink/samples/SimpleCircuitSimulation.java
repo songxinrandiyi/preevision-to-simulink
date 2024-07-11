@@ -14,7 +14,8 @@ public class SimpleCircuitSimulation {
 			// Add blocks to the model
 			matlab.eval("add_block('fl_lib/Electrical/Electrical Sources/DC Voltage Source', 'simpleCircuit/DC')");
 			matlab.eval("add_block('fl_lib/Electrical/Electrical Elements/Resistor', 'simpleCircuit/r1')");
-			matlab.eval("add_block('fl_lib/Electrical/Electrical Elements/Electrical Reference', 'simpleCircuit/ref1')");
+			matlab.eval(
+					"add_block('fl_lib/Electrical/Electrical Elements/Electrical Reference', 'simpleCircuit/ref1')");
 			matlab.eval("add_block('nesl_utility/Solver Configuration', 'simpleCircuit/solver1')");
 
 			// Set parameters for the blocks

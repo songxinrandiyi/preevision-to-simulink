@@ -1,5 +1,6 @@
 package preevisiontosimulink.parser.kblelements;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -11,6 +12,26 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "General_wire")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class GeneralWire {
+    private List<Connection> connections = new ArrayList<>();
+    
+    public List<Connection> getConnections() {
+        return connections;
+    }
+
+    public void addConnection(Connection connection) {
+        // Check if the connection ID already exists in the list
+        boolean connectionExists = connections.stream()
+                                              .anyMatch(conn -> conn.getId().equals(connection.getId()));
+
+        if (!connectionExists) {
+            this.connections.add(connection);
+        }
+    }
+    
+    public boolean isValid() {
+    	return !connections.isEmpty() && getCrossSectionArea().getValueComponent() != null;
+    }
+    
 	@XmlAttribute(name = "id")
 	private String id;
 

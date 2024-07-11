@@ -6,15 +6,16 @@ import preevisiontosimulink.library.Resistor;
 import preevisiontosimulink.library.SolverConfiguration;
 import preevisiontosimulink.proxy.relation.SimulinkRelation;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
+import preevisiontosimulink.proxy.system.SimulinkSystemType;
 
 public class ModelGenerator {
 	public static void main(String[] args) {
 		generateModel("simpleCircuit");
 	}
-	
+
 	public static void generateModel(String modelName) {
 		// Create the simulink system
-		SimulinkSystem system = new SimulinkSystem(modelName);
+		SimulinkSystem system = new SimulinkSystem(modelName, SimulinkSystemType.WIRING_HARNESS, null);
 
 		// Add blocks
 		system.addBlock(new DCVoltageSource(system, "DC"));
@@ -27,8 +28,8 @@ public class ModelGenerator {
 		system.getBlock("R1").setParameter("R", 50);
 
 		// Bind blocks
-		system.addRelation(new SimulinkRelation(system.getBlock("DC").getInPort(0),
-				system.getBlock("R1").getInPort(0), system));
+		system.addRelation(
+				new SimulinkRelation(system.getBlock("DC").getInPort(0), system.getBlock("R1").getInPort(0), system));
 		system.addRelation(new SimulinkRelation(system.getBlock("R1").getOutPort(0),
 				system.getBlock("Ref1").getInPort(0), system));
 		system.addRelation(new SimulinkRelation(system.getBlock("DC").getOutPort(0),

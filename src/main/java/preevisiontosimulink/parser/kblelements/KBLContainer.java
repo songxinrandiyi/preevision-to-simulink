@@ -11,24 +11,24 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "KBL_container")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class KBLContainer {
-	
+
 	@XmlAttribute(name = "id")
 	private String id;
-	
-    @XmlAttribute(name = "version_id")
-    private String versionId;
 
-    @XmlAttribute(name = "schemaLocation", namespace = "http://www.w3.org/2001/XMLSchema-instance")
-    private String schemaLocation;
-	
+	@XmlAttribute(name = "version_id")
+	private String versionId;
+
+	@XmlAttribute(name = "schemaLocation", namespace = "http://www.w3.org/2001/XMLSchema-instance")
+	private String schemaLocation;
+
 	@XmlElement(name = "Cartesian_point")
 	private List<CartesianPoint> cartesianPoints;
-	
-    @XmlElement(name = "Cavity_plug")
-    private List<CavityPlug> cavityPlugs;
-    
-    @XmlElement(name = "Cavity_seal")
-    private List<CavitySeal> cavitySeals;
+
+	@XmlElement(name = "Cavity_plug")
+	private List<CavityPlug> cavityPlugs;
+
+	@XmlElement(name = "Cavity_seal")
+	private List<CavitySeal> cavitySeals;
 
 	@XmlElement(name = "Node")
 	private List<Node> nodes;
@@ -56,7 +56,7 @@ public class KBLContainer {
 
 	@XmlElement(name = "Wire_protection")
 	private List<WireProtection> wireProtections;
-	
+
 	public List<CavitySeal> getCavitySeals() {
 		return cavitySeals;
 	}
@@ -64,7 +64,7 @@ public class KBLContainer {
 	public void setCavitySeals(List<CavitySeal> cavitySeals) {
 		this.cavitySeals = cavitySeals;
 	}
-	
+
 	public List<CavityPlug> getCavityPlugs() {
 		return cavityPlugs;
 	}

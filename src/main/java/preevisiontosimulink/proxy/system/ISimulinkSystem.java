@@ -23,7 +23,7 @@ public interface ISimulinkSystem {
 
 	List<ISimulinkRelation> getRelationList();
 
-	List<SimulinkSubsystem> getSubsystemList(SubsystemType type);
+	List<SimulinkSubsystem> getSubsystemList(SimulinkSubsystemType type);
 
 	SimulinkSubsystem getSubsystem(String name);
 

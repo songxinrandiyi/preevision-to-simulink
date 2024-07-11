@@ -10,136 +10,136 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CavitySeal {
 
-    @XmlAttribute(name = "id")
-    private String id;
+	@XmlAttribute(name = "id")
+	private String id;
 
-    @XmlElement(name = "Part_number")
-    private String partNumber;
+	@XmlElement(name = "Part_number")
+	private String partNumber;
 
-    @XmlElement(name = "Company_name")
-    private String companyName;
+	@XmlElement(name = "Company_name")
+	private String companyName;
 
-    @XmlElement(name = "Version")
-    private String version;
+	@XmlElement(name = "Version")
+	private String version;
 
-    @XmlElement(name = "Abbreviation")
-    private String abbreviation;
+	@XmlElement(name = "Abbreviation")
+	private String abbreviation;
 
-    @XmlElement(name = "Description")
-    private String description;
+	@XmlElement(name = "Description")
+	private String description;
 
-    @XmlElement(name = "Predecessor_part_number")
-    private String predecessorPartNumber;
+	@XmlElement(name = "Predecessor_part_number")
+	private String predecessorPartNumber;
 
-    @XmlElement(name = "Degree_of_maturity")
-    private String degreeOfMaturity;
+	@XmlElement(name = "Degree_of_maturity")
+	private String degreeOfMaturity;
 
-    @XmlElement(name = "Copyright_note")
-    private String copyrightNote;
+	@XmlElement(name = "Copyright_note")
+	private String copyrightNote;
 
-    @XmlElement(name = "Colour")
-    private String colour;
+	@XmlElement(name = "Colour")
+	private String colour;
 
-    @XmlElement(name = "Seal_type")
-    private String sealType;
+	@XmlElement(name = "Seal_type")
+	private String sealType;
 
-    @XmlElement(name = "Wire_size")
-    private WireSize wireSize;
+	@XmlElement(name = "Wire_size")
+	private WireSize wireSize;
 
-    // Getters and setters
-    public String getId() {
-        return id;
-    }
+	// Getters and setters
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getPartNumber() {
-        return partNumber;
-    }
+	public String getPartNumber() {
+		return partNumber;
+	}
 
-    public void setPartNumber(String partNumber) {
-        this.partNumber = partNumber;
-    }
+	public void setPartNumber(String partNumber) {
+		this.partNumber = partNumber;
+	}
 
-    public String getCompanyName() {
-        return companyName;
-    }
+	public String getCompanyName() {
+		return companyName;
+	}
 
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
 
-    public String getVersion() {
-        return version;
-    }
+	public String getVersion() {
+		return version;
+	}
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
+	public void setVersion(String version) {
+		this.version = version;
+	}
 
-    public String getAbbreviation() {
-        return abbreviation;
-    }
+	public String getAbbreviation() {
+		return abbreviation;
+	}
 
-    public void setAbbreviation(String abbreviation) {
-        this.abbreviation = abbreviation;
-    }
+	public void setAbbreviation(String abbreviation) {
+		this.abbreviation = abbreviation;
+	}
 
-    public String getDescription() {
-        return description;
-    }
+	public String getDescription() {
+		return description;
+	}
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-    public String getPredecessorPartNumber() {
-        return predecessorPartNumber;
-    }
+	public String getPredecessorPartNumber() {
+		return predecessorPartNumber;
+	}
 
-    public void setPredecessorPartNumber(String predecessorPartNumber) {
-        this.predecessorPartNumber = predecessorPartNumber;
-    }
+	public void setPredecessorPartNumber(String predecessorPartNumber) {
+		this.predecessorPartNumber = predecessorPartNumber;
+	}
 
-    public String getDegreeOfMaturity() {
-        return degreeOfMaturity;
-    }
+	public String getDegreeOfMaturity() {
+		return degreeOfMaturity;
+	}
 
-    public void setDegreeOfMaturity(String degreeOfMaturity) {
-        this.degreeOfMaturity = degreeOfMaturity;
-    }
+	public void setDegreeOfMaturity(String degreeOfMaturity) {
+		this.degreeOfMaturity = degreeOfMaturity;
+	}
 
-    public String getCopyrightNote() {
-        return copyrightNote;
-    }
+	public String getCopyrightNote() {
+		return copyrightNote;
+	}
 
-    public void setCopyrightNote(String copyrightNote) {
-        this.copyrightNote = copyrightNote;
-    }
+	public void setCopyrightNote(String copyrightNote) {
+		this.copyrightNote = copyrightNote;
+	}
 
-    public String getColour() {
-        return colour;
-    }
+	public String getColour() {
+		return colour;
+	}
 
-    public void setColour(String colour) {
-        this.colour = colour;
-    }
+	public void setColour(String colour) {
+		this.colour = colour;
+	}
 
-    public String getSealType() {
-        return sealType;
-    }
+	public String getSealType() {
+		return sealType;
+	}
 
-    public void setSealType(String sealType) {
-        this.sealType = sealType;
-    }
+	public void setSealType(String sealType) {
+		this.sealType = sealType;
+	}
 
-    public WireSize getWireSize() {
-        return wireSize;
-    }
+	public WireSize getWireSize() {
+		return wireSize;
+	}
 
-    public void setWireSize(WireSize wireSize) {
-        this.wireSize = wireSize;
-    }
+	public void setWireSize(WireSize wireSize) {
+		this.wireSize = wireSize;
+	}
 }

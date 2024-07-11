@@ -3,6 +3,9 @@ package preevisiontosimulink.proxy.system;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,12 +23,16 @@ import preevisiontosimulink.util.StringUtils;
 public class SimulinkSystem implements ISimulinkSystem {
 	private ISimulinkSystem parent = null;
 	private String name;
+	private SimulinkSystemType type;
+	private String path = null;
 	private List<ISimulinkBlock> blockList = new ArrayList<>();
 	private List<ISimulinkRelation> relationList = new ArrayList<>();
 	private List<SimulinkSubsystem> subsystemList = new ArrayList<>();
 
-	public SimulinkSystem(String name) {
+	public SimulinkSystem(String name, SimulinkSystemType type, String path) {
 		this.name = name;
+		this.type = type;
+		this.path = path;
 	}
 
 	@Override
@@ -66,15 +73,7 @@ public class SimulinkSystem implements ISimulinkSystem {
 			for (SimulinkSubsystem subsystem : subsystemList) {
 				if (subsystem.getContactPoints() != null && subsystem.getContactPoints().size() > 0) {
 					subsystem.generateModel(matlab);
-				}			
-			}
-
-			for (DCCurrentSource currentSource : getAllCurrentSourceBlocks()) {
-				currentSource.setParameter("Orientation", "Left");
-			}
-
-			for (VoltageSensor voltageSensor : getAllVoltageSensorBlocks()) {
-				voltageSensor.setParameter("Orientation", "Right");
+				}
 			}
 
 			// Generate the Simulink model for each block in the blockList
@@ -86,22 +85,29 @@ public class SimulinkSystem implements ISimulinkSystem {
 			for (ISimulinkRelation relation : relationList) {
 				relation.generateModel(matlab);
 			}
+			
+			if (this.type != null) {
+				if (this.type == SimulinkSystemType.WIRING_HARNESS) {
+					logInfo();
+				}
+			}
 
 			matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + name + "')");
 			
-			/*
-			for (SimulinkSubsystem subsystem : getSubsystemList(SubsystemType.KABEL)) {
-				Contact leftContactPoint = subsystem.getContactPoints().get(0);
-				Contact rightContactPoint = subsystem.getContactPoints().get(1);
-				System.out.println("Contact Point: " + leftContactPoint + ", " + rightContactPoint);
-				System.out.println();
-			}
-			*/
+			matlab.eval("set_param('" + name + "', 'StopTime', '300')");
 			
-			logInfo();
+			String modelForderPath = "simulink/";
+			if (path != null) {
+				modelForderPath += path + "/";
+			} 
+			
+	        Path simulinkDir = Paths.get(modelForderPath);
+	        if (!Files.exists(simulinkDir)) {
+	            Files.createDirectory(simulinkDir);
+	        }
 
 			// Save the model
-			String modelFilePath = "" + name + ".slx";
+			String modelFilePath = modelForderPath + name + ".slx";
 			matlab.eval("save_system('" + name + "', '" + modelFilePath + "')");
 
 			System.out.println("Simulink model generated: " + name);
@@ -112,43 +118,45 @@ public class SimulinkSystem implements ISimulinkSystem {
 			e.printStackTrace();
 		}
 	}
-	
-    public void logInfo() {
-        // Get the first part of the system's name
-        String firstPartOfSystemName = StringUtils.getFirstPart(this.name);
-        String logFileName = firstPartOfSystemName + "_log.txt";
-        StringBuilder logContent = new StringBuilder();
 
-        for (SimulinkSubsystem subsystem : getSubsystemList(SubsystemType.STECKER)) {
-            if (subsystem.getContactPoints() != null && subsystem.getContactPoints().size() > 0) {
-                System.out.println("Connector: " + subsystem.getName());
-                logContent.append("Connector: ").append(subsystem.getName()).append("\n");
+	public void logInfo() {
+		// Get the first part of the system's name
+		String firstPartOfSystemName = StringUtils.getFirstPart(this.name);
+		String logFileName = firstPartOfSystemName + "_log.txt";
+		StringBuilder logContent = new StringBuilder();
 
-                for (int i = 1; i < subsystem.getNumOfPins() + 1; i++) {
-                    System.out.println("Pin " + i + " has number of contact points: " + subsystem.getContactsByPinNumber(i).size());
-                    logContent.append("Pin ").append(i).append(" has number of contact points: ")
-                              .append(subsystem.getContactsByPinNumber(i).size()).append("\n");
+		for (SimulinkSubsystem subsystem : getSubsystemList(SimulinkSubsystemType.STECKER)) {
+			if (subsystem.getContactPoints() != null && subsystem.getContactPoints().size() > 0) {
+				System.out.println("Connector: " + subsystem.getName());
+				logContent.append("Connector: ").append(subsystem.getName()).append("\n");
 
-                    for (Contact contact : subsystem.getContactsByPinNumber(i)) {
-                        System.out.println(contact.getName() + ", Pin " + contact.getPinNumberTo());
-                        logContent.append(contact.getName()).append(", Pin ").append(contact.getPinNumberTo()).append("\n");
-                    }
-                    System.out.println(); 
-                    logContent.append("\n");
-                }
-                System.out.println();
-                System.out.println();
-                logContent.append("\n\n");
-            }
-        }
+				for (int i = 1; i < subsystem.getNumOfPins() + 1; i++) {
+					System.out.println("Pin " + i + " has number of contact points: "
+							+ subsystem.getContactsByPinNumber(i).size());
+					logContent.append("Pin ").append(i).append(" has number of contact points: ")
+							.append(subsystem.getContactsByPinNumber(i).size()).append("\n");
 
-        // Write to file, overwriting if it exists
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(logFileName, false))) {
-            writer.write(logContent.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+					for (Contact contact : subsystem.getContactsByPinNumber(i)) {
+						System.out.println(contact.getName() + ", Pin " + contact.getPinNumberTo());
+						logContent.append(contact.getName()).append(", Pin ").append(contact.getPinNumberTo())
+								.append("\n");
+					}
+					System.out.println();
+					logContent.append("\n");
+				}
+				System.out.println();
+				System.out.println();
+				logContent.append("\n\n");
+			}
+		}
+
+		// Write to file, overwriting if it exists
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(logFileName, false))) {
+			writer.write(logContent.toString());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Override
 	public List<ISimulinkBlock> getBlockList() {
@@ -172,7 +180,7 @@ public class SimulinkSystem implements ISimulinkSystem {
 	}
 
 	@Override
-	public List<SimulinkSubsystem> getSubsystemList(SubsystemType type) {
+	public List<SimulinkSubsystem> getSubsystemList(SimulinkSubsystemType type) {
 		return subsystemList.stream().filter(subsystem -> subsystem.getType() == type).collect(Collectors.toList());
 	}
 
@@ -219,17 +227,19 @@ public class SimulinkSystem implements ISimulinkSystem {
 		return subsystemList.stream().filter(subsystem -> subsystem.getName().contains(searchString))
 				.collect(Collectors.toList());
 	}
-	
-    public SimulinkSubsystem findSubsystemWithContactPoints(Contact leftContactPoint, Contact rightContactPoint) {
-        for (SimulinkSubsystem subsystem : getSubsystemList(SubsystemType.KABEL)) {
-            if (subsystem.getContactPoints().size() == 2) {
-                if (subsystem.getContactPoints().get(0).equals(leftContactPoint) && subsystem.getContactPoints().get(1).equals(rightContactPoint)) {
-                    return subsystem;
-                } else if (subsystem.getContactPoints().get(0).equals(rightContactPoint) && subsystem.getContactPoints().get(1).equals(leftContactPoint)) {
+
+	public SimulinkSubsystem findSubsystemWithContactPoints(Contact leftContactPoint, Contact rightContactPoint) {
+		for (SimulinkSubsystem subsystem : getSubsystemList(SimulinkSubsystemType.KABEL)) {
+			if (subsystem.getContactPoints().size() == 2) {
+				if (subsystem.getContactPoints().get(0).equals(leftContactPoint)
+						&& subsystem.getContactPoints().get(1).equals(rightContactPoint)) {
+					return subsystem;
+				} else if (subsystem.getContactPoints().get(0).equals(rightContactPoint)
+						&& subsystem.getContactPoints().get(1).equals(leftContactPoint)) {
 					return subsystem;
 				}
-            }
-        }
-        return null; // Return null if no matching subsystem is found
-    }
+			}
+		}
+		return null; // Return null if no matching subsystem is found
+	}
 }

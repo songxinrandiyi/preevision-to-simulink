@@ -13,6 +13,7 @@ import preevisiontosimulink.proxy.relation.SimulinkExternRelation;
 import preevisiontosimulink.proxy.relation.SimulinkRelation;
 import preevisiontosimulink.proxy.system.SimulinkSubsystem;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
+import preevisiontosimulink.proxy.system.SimulinkSystemType;
 
 public class ModelGenerator2 {
 	public static void main(String[] args) {
@@ -20,7 +21,7 @@ public class ModelGenerator2 {
 	}
 
 	public static void generateModel(String modelName) {
-		SimulinkSystem system = new SimulinkSystem(modelName);
+		SimulinkSystem system = new SimulinkSystem(modelName, SimulinkSystemType.WIRING_HARNESS, null);
 		SimulinkSubsystem lastSubsystem;
 		SimulinkSubsystem secondLastSubsystem;
 		/*

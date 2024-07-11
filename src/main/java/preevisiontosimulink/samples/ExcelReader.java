@@ -11,7 +11,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import preevisiontosimulink.util.CellUtils;
+import preevisiontosimulink.util.ExcelUtils;
 
 public class ExcelReader {
 	public static void main(String[] args) {
@@ -36,39 +36,39 @@ public class ExcelReader {
 		for (int i = rowBegin; i <= sheet.getLastRowNum(); i++) {
 			Row row = sheet.getRow(i);
 			if (rowCount >= 500) {
-	            break;
-	        }
+				break;
+			}
 			if (row == null) {
 				continue; // Skip if row is null
 			}
 			Cell connector1 = row.getCell(2);
-	        Cell pinnummer1 = row.getCell(3);
-	        Cell connector2 = row.getCell(11);
-	        Cell pinnummer2 = row.getCell(12);
-	        Cell currentValue = row.getCell(7);
-	        
-	        String connectorName1 = null;
-	        String connectorName2 = null;
-	        Integer pin1 = null;
-	        Integer pin2 = null;
-	        Double current = null;
-	        
-	        Boolean notBlank = pinnummer1.getCellType() != CellType.BLANK && pinnummer2.getCellType() != CellType.BLANK 
-	        		&& connector1.getCellType() != CellType.BLANK && connector2.getCellType() != CellType.BLANK
-	        		&& currentValue.getCellType() != CellType.BLANK;
+			Cell pinnummer1 = row.getCell(3);
+			Cell connector2 = row.getCell(11);
+			Cell pinnummer2 = row.getCell(12);
+			Cell currentValue = row.getCell(7);
 
-            if (notBlank) {
-            	connectorName1 = connector1.getStringCellValue();
-                if (!connectorName1.isEmpty()) {
-                	System.out.println("Leftconnector: " + connectorName1);
-                } else {
-	                System.out.println("Empty leftconnector");
-                }
-                pin1 = CellUtils.getIntegerValueFromCell(pinnummer1);
-                if (pin1 == null) {
+			String connectorName1 = null;
+			String connectorName2 = null;
+			Integer pin1 = null;
+			Integer pin2 = null;
+			Double current = null;
+
+			Boolean notBlank = pinnummer1.getCellType() != CellType.BLANK && pinnummer2.getCellType() != CellType.BLANK
+					&& connector1.getCellType() != CellType.BLANK && connector2.getCellType() != CellType.BLANK
+					&& currentValue.getCellType() != CellType.BLANK;
+
+			if (notBlank) {
+				connectorName1 = connector1.getStringCellValue();
+				if (!connectorName1.isEmpty()) {
+					System.out.println("Leftconnector: " + connectorName1);
+				} else {
+					System.out.println("Empty leftconnector");
+				}
+				pin1 = ExcelUtils.getIntegerValueFromCell(pinnummer1);
+				if (pin1 == null) {
 					pin1 = 1;
 				}
-                System.out.println("Leftpin: " + pin1);
+				System.out.println("Leftpin: " + pin1);
 
 				connectorName2 = connector2.getStringCellValue();
 				if (!connectorName2.isEmpty()) {
@@ -76,24 +76,24 @@ public class ExcelReader {
 				} else {
 					System.out.println("Empty rightconnector");
 				}
-                pin2 = CellUtils.getIntegerValueFromCell(pinnummer2);
+				pin2 = ExcelUtils.getIntegerValueFromCell(pinnummer2);
 				if (pin2 == null) {
 					pin2 = 1;
 				}
-                System.out.println("Rightpin: " + pin2);
-                
-                current = CellUtils.getNumericValueFromCell(currentValue);
+				System.out.println("Rightpin: " + pin2);
+
+				current = ExcelUtils.getNumericValueFromCell(currentValue);
 				if (current == null) {
 					current = 0.0;
 				}
 				System.out.println("Current: " + current);
-            } 
+			}
 
-	        System.out.println();
-	        rowCount++;
-	    }
+			System.out.println();
+			rowCount++;
+		}
 	}
-		
+
 	private static void printCellValue(Cell cell) {
 		switch (cell.getCellType()) {
 		case STRING:

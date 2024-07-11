@@ -19,9 +19,11 @@ import preevisiontosimulink.proxy.block.ISimulinkBlock;
 import preevisiontosimulink.proxy.relation.SimulinkExternRelation;
 import preevisiontosimulink.proxy.relation.SimulinkRelation;
 import preevisiontosimulink.proxy.system.SimulinkSubsystem;
+import preevisiontosimulink.proxy.system.SimulinkSubsystemType;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
-import preevisiontosimulink.proxy.system.SubsystemType;
-import preevisiontosimulink.util.CellUtils;
+import preevisiontosimulink.proxy.system.SimulinkSystemType;
+import preevisiontosimulink.util.ExcelUtils;
+import preevisiontosimulink.util.SimulinkSubsystemHelper;
 
 public class ExcelParser {
 	private SimulinkSystem system;
@@ -34,7 +36,7 @@ public class ExcelParser {
 	}
 
 	public void generateModel() {
-		system = new SimulinkSystem(modelName);
+		system = new SimulinkSystem(modelName, SimulinkSystemType.WIRING_HARNESS, null);
 		for (String path : filePaths) {
 			try (FileInputStream fis = new FileInputStream(path); Workbook workbook = new XSSFWorkbook(fis)) {
 
@@ -86,7 +88,7 @@ public class ExcelParser {
 				SimulinkSubsystem subsystem1 = system.getSubsystem(component1Name);
 				if (subsystem1.getInConnection(pin1Name) == null) {
 					subsystem1.addInConnection(new LConnection(subsystem1, pin1Name));
-					subsystem1.reorderConnectionsForExcel();
+					SimulinkSubsystemHelper.reorderConnectionsForExcel(subsystem1);
 				}
 
 				if (system.getSubsystem(component2Name) == null) {
@@ -95,7 +97,7 @@ public class ExcelParser {
 				SimulinkSubsystem subsystem2 = system.getSubsystem(component2Name);
 				if (subsystem2.getInConnection(pin2Name) == null) {
 					subsystem2.addInConnection(new LConnection(subsystem2, pin2Name));
-					subsystem2.reorderConnectionsForExcel();
+					SimulinkSubsystemHelper.reorderConnectionsForExcel(subsystem2);
 				}
 			}
 		}
@@ -145,7 +147,7 @@ public class ExcelParser {
 	}
 
 	private void generateReplacement() {
-		List<SimulinkSubsystem> subsystems = system.getSubsystemList(SubsystemType.STECKER);
+		List<SimulinkSubsystem> subsystems = system.getSubsystemList(SimulinkSubsystemType.STECKER);
 		for (SimulinkSubsystem subsystem : subsystems) {
 			List<LConnection> inPorts = subsystem.getInConnections();
 			if (inPorts != null) {
@@ -235,7 +237,7 @@ public class ExcelParser {
 		if (cellLength.getCellType() == CellType.NUMERIC) {
 			length = cellLength.getNumericCellValue();
 		} else if (cellLength.getCellType() == CellType.STRING) {
-			length = CellUtils.convertStringToDouble(cellLength.getStringCellValue());
+			length = ExcelUtils.convertStringToDouble(cellLength.getStringCellValue());
 		} else {
 			// Handle other cell types or invalid values appropriately
 			throw new IllegalArgumentException("Invalid cell type for length");
@@ -244,7 +246,7 @@ public class ExcelParser {
 		if (cellCrossSectionalArea.getCellType() == CellType.NUMERIC) {
 			crossSectionalArea = cellCrossSectionalArea.getNumericCellValue();
 		} else if (cellCrossSectionalArea.getCellType() == CellType.STRING) {
-			crossSectionalArea = CellUtils.convertStringToDouble(cellCrossSectionalArea.getStringCellValue());
+			crossSectionalArea = ExcelUtils.convertStringToDouble(cellCrossSectionalArea.getStringCellValue());
 		} else {
 			// Handle other cell types or invalid values appropriately
 			throw new IllegalArgumentException("Invalid cell type for cross-sectional area");

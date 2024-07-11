@@ -11,6 +11,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "Connector_occurrence")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ConnectorOccurrence {
+    private ConnectorHousing connectorHousing = null;  
+    
+	public ConnectorHousing getConnectorHousing() {
+		return connectorHousing;
+	}
+
+	public void setConnectorHousing(ConnectorHousing connectorHousing) {
+		this.connectorHousing = connectorHousing;
+	}
+
 	@XmlAttribute(name = "id")
 	private String id;
 
@@ -65,5 +75,13 @@ public class ConnectorOccurrence {
 
 	public void setSlot(Slots slot) {
 		this.slots = slot;
+	}
+
+	public String getConnectorId() {
+		return connectorId;
+	}
+
+	public void setConnectorId(String connectorId) {
+		this.connectorId = connectorId;
 	}
 }

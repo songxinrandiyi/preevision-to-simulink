@@ -12,7 +12,7 @@ import preevisiontosimulink.parser.kblelements.GeneralWireOccurrence;
 import preevisiontosimulink.parser.kblelements.Node;
 import preevisiontosimulink.parser.kblelements.Slots;
 
-public class JAXBUtils {
+public class KBLUtils {
 	public static GeneralWireOccurrence findGeneralWireOccurrence(List<GeneralWireOccurrence> generalWireOccurrences,
 			String id) {
 		if (generalWireOccurrences == null) {
@@ -25,7 +25,7 @@ public class JAXBUtils {
 		}
 		return null; // If no corresponding CartesianPoint is found
 	}
-	
+
 	public static Integer getCavityNumberById(ConnectorHousing connectorHousing, String cavityId) {
 		if (connectorHousing == null || connectorHousing.getSlots() == null) {
 			return null;
@@ -43,7 +43,7 @@ public class JAXBUtils {
 		}
 		return null; // Return null if the cavity with the given ID is not found
 	}
-	
+
 	public static ConnectorOccurrence findConnectorOccurrence(List<ConnectorOccurrence> connectorOccurrences,
 			String largeId) {
 		for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
@@ -62,7 +62,7 @@ public class JAXBUtils {
 		}
 		return null; // If no corresponding CartesianPoint is found
 	}
-	
+
 	public static Connection findConnection(List<Connection> connections, String id) {
 		for (Connection connection : connections) {
 			if (connection.getId().equals(id)) {
@@ -71,7 +71,7 @@ public class JAXBUtils {
 		}
 		return null; // If no corresponding CartesianPoint is found
 	}
-	
+
 	public static Cavity findCavityInConnectorOccurrence(ConnectorOccurrence connectorOccurrence, String id) {
 		if (connectorOccurrence != null) {
 			List<Cavity> cavities = connectorOccurrence.getSlots().getCavities();
@@ -89,7 +89,7 @@ public class JAXBUtils {
 		if (connectorHousing == null || connectorHousing.getSlots() == null) {
 			return null;
 		}
-		
+
 		List<Cavity> cavities = connectorHousing.getSlots().getCavities();
 		for (Cavity cavity : cavities) {
 			if (cavity.getId().equals(id)) {
@@ -98,7 +98,7 @@ public class JAXBUtils {
 		}
 		return null; // If no corresponding CartesianPoint is found
 	}
-	
+
 	public static Integer findPinNumWithContactPointId(ConnectorOccurrence connectorOccurrence,
 			ConnectorHousing connectorHousing, String id) {
 		if (connectorOccurrence != null && connectorHousing != null) {
@@ -129,9 +129,9 @@ public class JAXBUtils {
 			return null;
 		}
 	}
-	
-	public static ConnectorOccurrence findConnectorOccurrenceWithContactPoint(List<ConnectorOccurrence> connectorOccurrences,
-			String id) {
+
+	public static ConnectorOccurrence findConnectorOccurrenceWithContactPoint(
+			List<ConnectorOccurrence> connectorOccurrences, String id) {
 		if (connectorOccurrences != null) {
 			for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
 				List<ContactPoint> contactPoints = connectorOccurrence.getContactPoints();
@@ -147,7 +147,7 @@ public class JAXBUtils {
 
 		return null; // If no corresponding CartesianPoint is found
 	}
-	
+
 	public static GeneralWire findGeneralWire(List<GeneralWire> generalWires, String id) {
 		if (generalWires != null) {
 			for (GeneralWire generalWire : generalWires) {

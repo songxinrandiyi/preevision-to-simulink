@@ -55,12 +55,9 @@ public class Contact {
 		result = 31 * result + pinNumberTo.hashCode();
 		return result;
 	}
-	
-    @Override
-    public String toString() {
-        return "ContactPoint{" +
-                "connectorName='" + name + '\'' +
-                ", pinNumber=" + pinNumberTo +
-                '}';
-    }
+
+	@Override
+	public String toString() {
+		return "ContactPoint{" + "connectorName='" + name + '\'' + ", pinNumber=" + pinNumberTo + '}';
+	}
 }
