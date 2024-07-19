@@ -102,12 +102,12 @@ public class SimulinkSystem implements ISimulinkSystem {
 
 			String modelForderPath = "simulink/";
 			if (path != null) {
-				modelForderPath += path + "/";
+			    modelForderPath += path + "/";
 			}
 
 			Path simulinkDir = Paths.get(modelForderPath);
 			if (!Files.exists(simulinkDir)) {
-				Files.createDirectory(simulinkDir);
+			    Files.createDirectories(simulinkDir);
 			}
 
 			// Save the model
