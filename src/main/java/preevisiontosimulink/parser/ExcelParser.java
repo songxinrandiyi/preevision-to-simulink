@@ -13,6 +13,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import com.mathworks.engine.MatlabEngine;
+
 import preevisiontosimulink.library.LConnection;
 import preevisiontosimulink.library.Resistor;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
@@ -52,7 +54,13 @@ public class ExcelParser {
 				e.printStackTrace();
 			}
 		}
-		system.generateModel();
+		try {
+			MatlabEngine matlab = MatlabEngine.startMatlab();
+			system.generateModel(matlab);
+			matlab.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void generateBlocks(Sheet sheet) {

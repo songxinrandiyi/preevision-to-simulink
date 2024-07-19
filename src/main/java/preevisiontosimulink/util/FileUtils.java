@@ -13,12 +13,7 @@ public class FileUtils {
 		String fileName = inputFile.getName();
 		String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
 		String extension = fileName.substring(fileName.lastIndexOf('.'));
-		int count = 1;
-		File outputFile = new File(outputDir, baseName + "_" + count + extension);
-		while (outputFile.exists()) {
-			count++;
-			outputFile = new File(outputDir, baseName + "_" + count + extension);
-		}
+		File outputFile = new File(outputDir, baseName + "_modified" + extension);
 		return outputFile;
 	}
 

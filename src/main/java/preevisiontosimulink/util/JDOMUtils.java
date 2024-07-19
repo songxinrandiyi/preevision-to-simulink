@@ -20,20 +20,12 @@ public class JDOMUtils {
 		}
 	}
 
-	public static void setLength(List<Element> generalWireOccurrences, String id, Double value) {
-		for (Element generalWireOccurrence : generalWireOccurrences) {
-			if (generalWireOccurrence.getAttributeValue("id").equals(id)) {
-				List<Element> lengthInformationList = generalWireOccurrence.getChildren("Length_information");
-				if (!lengthInformationList.isEmpty()) {
-					for (Element lengthInformation : lengthInformationList) {
-						Element lengthValue = lengthInformation.getChild("Length_value");
-						if (lengthValue != null) {
-							Element valueComponent = lengthValue.getChild("Value_component");
-							if (valueComponent != null) {
-								valueComponent.setText(value.toString());
-							}
-						}
-					}
+	public static void setGeneralWirePartNumber(List<Element> generalWires, String id, String partNumberValue) {
+		for (Element generalWire : generalWires) {
+			if (generalWire.getAttributeValue("id").equals(id)) {
+				Element partNumber = generalWire.getChild("Part_number");
+				if (partNumber != null) {
+					partNumber.setText(partNumberValue);
 				}
 			}
 		}

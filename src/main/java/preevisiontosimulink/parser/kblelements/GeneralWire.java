@@ -2,6 +2,7 @@ package preevisiontosimulink.parser.kblelements;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -12,26 +13,29 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "General_wire")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class GeneralWire {
-    private List<Connection> connections = new ArrayList<>();
-    
-    public List<Connection> getConnections() {
-        return connections;
-    }
+	private List<Connection> connections = new ArrayList<>();
 
-    public void addConnection(Connection connection) {
-        // Check if the connection ID already exists in the list
-        boolean connectionExists = connections.stream()
-                                              .anyMatch(conn -> conn.getId().equals(connection.getId()));
+	public List<Connection> getConnections() {
+		return connections;
+	}
+	
+	public List<Connection> getValidConnections() {
+		return connections.stream().filter(Connection::isValid).collect(Collectors.toList());
+	}
 
-        if (!connectionExists) {
-            this.connections.add(connection);
-        }
-    }
-    
-    public boolean isValid() {
-    	return !connections.isEmpty() && getCrossSectionArea().getValueComponent() != null;
-    }
-    
+	public void addConnection(Connection connection) {
+		// Check if the connection ID already exists in the list
+		boolean connectionExists = connections.stream().anyMatch(conn -> conn.getId().equals(connection.getId()));
+
+		if (!connectionExists) {
+			this.connections.add(connection);
+		}
+	}
+
+	public boolean isValid() {
+		return !connections.isEmpty() && getCrossSectionArea().getValueComponent() != null;
+	}
+
 	@XmlAttribute(name = "id")
 	private String id;
 

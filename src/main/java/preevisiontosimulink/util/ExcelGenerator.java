@@ -26,7 +26,8 @@ public class ExcelGenerator {
 		Workbook workbook = new XSSFWorkbook();
 		Sheet sheet = createSheetWithHeaders(workbook, modelName, false);
 
-		List<SimulinkSubsystem> subsystems = filterAndSortSubsystems(system.getSubsystemList(SimulinkSubsystemType.KABEL));
+		List<SimulinkSubsystem> subsystems = filterAndSortSubsystems(
+				system.getSubsystemList(SimulinkSubsystemType.KABEL));
 		populateDataRows(sheet, subsystems, false);
 
 		autoSizeColumns(sheet, 24);
@@ -37,7 +38,8 @@ public class ExcelGenerator {
 		Workbook workbook = new XSSFWorkbook();
 		Sheet sheet = createSheetWithHeaders(workbook, modelName, true);
 
-		List<SimulinkSubsystem> subsystems = filterAndSortSubsystems(system.getSubsystemList(SimulinkSubsystemType.KABEL));
+		List<SimulinkSubsystem> subsystems = filterAndSortSubsystems(
+				system.getSubsystemList(SimulinkSubsystemType.KABEL));
 		populateDataRows(sheet, subsystems, true);
 
 		autoSizeColumns(sheet, 11);

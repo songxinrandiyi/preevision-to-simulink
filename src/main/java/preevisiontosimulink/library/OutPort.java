@@ -22,6 +22,6 @@ public class OutPort extends SimulinkBlock {
 		num++;
 
 		// Initialize inputs and outputs if necessary
-		this.inPorts.add(new SimulinkPort(1, this));
+		this.addInPort(new SimulinkPort(1, this));
 	}
 }

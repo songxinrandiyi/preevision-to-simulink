@@ -59,4 +59,11 @@ public class StringUtils {
 		String[] parts = name.split("_");
 		return Integer.parseInt(parts[position]);
 	}
+	
+	public static String produceValidModelNameFromWire(String str) {
+	    if (str == null) {
+	        return null;
+	    }
+	    return str.replace('-', '_').replace('/', '_').replace(",", "").replace(" ", "");
+	}
 }

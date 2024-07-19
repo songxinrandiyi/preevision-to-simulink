@@ -12,35 +12,38 @@ public class Connection {
 	private String name = null;
 	private Double resistance = null;
 	private Double length = null;
-	private Double crossSectionArea = null;
 	private Integer startPin = null;
 	private Integer endPin = null;
-    private ConnectorOccurrence startConnector = null;
-    private ConnectorOccurrence endConnector = null;
-    private GeneralWireOccurrence generalWireOccurrence = null;
-    
-    public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
+	private ConnectorOccurrence startConnector = null;
+	private ConnectorOccurrence endConnector = null;
+	String startConnectorName = null;
+	String endConnectorName = null;
+	private GeneralWireOccurrence generalWireOccurrence = null;
 	
-	public Double getResistance() {
-        return resistance;
-    }
+	private Double crossSectionArea = null;
+	private Double thicknessIso = null;
+	private Double current = null;
+	private String material = null;
 	
-	public void setResistance(Double resistance) {
-        this.resistance = resistance;
-    }
-
-	public Double getLength() {
-		return length;
+	public boolean isValid() {
+		return getStartConnector() != null && getEndConnector() != null
+				&& getStartPin() != null && getEndPin() != null;
+	}
+		
+	public String getStartConnectorName() {
+		return startConnectorName;
 	}
 
-	public void setLength(Double length) {
-		this.length = length;
+	public void setStartConnectorName(String startConnectorName) {
+		this.startConnectorName = startConnectorName;
+	}
+
+	public String getEndConnectorName() {
+		return endConnectorName;
+	}
+
+	public void setEndConnectorName(String endConnectorName) {
+		this.endConnectorName = endConnectorName;
 	}
 
 	public Double getCrossSectionArea() {
@@ -49,6 +52,54 @@ public class Connection {
 
 	public void setCrossSectionArea(Double crossSectionArea) {
 		this.crossSectionArea = crossSectionArea;
+	}
+	
+    public Double getThicknessIso() {
+        return thicknessIso;
+    }
+    
+    public void setThicknessIso(Double thicknessIso) {
+        this.thicknessIso = thicknessIso;
+    }
+    
+    public Double getCurrent() {
+        return current;
+    }
+    
+    public void setCurrent(Double current) {
+        this.current = current;
+    }
+    
+    public String getMaterial() {
+        return material;
+    }
+    
+    public void setMaterial(String material) {
+        this.material = material;
+    }
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Double getResistance() {
+		return resistance;
+	}
+
+	public void setResistance(Double resistance) {
+		this.resistance = resistance;
+	}
+
+	public Double getLength() {
+		return length;
+	}
+
+	public void setLength(Double length) {
+		this.length = length;
 	}
 
 	public Integer getStartPin() {
@@ -68,21 +119,21 @@ public class Connection {
 	}
 
 	public ConnectorOccurrence getStartConnector() {
-        return startConnector;
-    }
+		return startConnector;
+	}
 
-    public void setStartConnector(ConnectorOccurrence startConnector) {
-        this.startConnector = startConnector;
-    }
+	public void setStartConnector(ConnectorOccurrence startConnector) {
+		this.startConnector = startConnector;
+	}
 
-    public ConnectorOccurrence getEndConnector() {
-        return endConnector;
-    }
+	public ConnectorOccurrence getEndConnector() {
+		return endConnector;
+	}
 
-    public void setEndConnector(ConnectorOccurrence endConnector) {
-        this.endConnector = endConnector;
-    }
-    
+	public void setEndConnector(ConnectorOccurrence endConnector) {
+		this.endConnector = endConnector;
+	}
+
 	public GeneralWireOccurrence getGeneralWireOccurrence() {
 		return generalWireOccurrence;
 	}

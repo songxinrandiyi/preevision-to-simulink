@@ -308,7 +308,7 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 			for (SimulinkSubsystem subsystem : subsystemList) {
 				subsystem.generateModel(matlab);
 			}
-			
+
 			if (this.type == SimulinkSubsystemType.STECKER) {
 				for (VoltageSensor voltageSensor : getAllVoltageSensorBlocks()) {
 					voltageSensor.setParameter("Orientation", "Right");
@@ -341,16 +341,19 @@ public class SimulinkSubsystem implements ISimulinkSystem {
 			}
 
 			switch (this.type) {
-			    case STECKER:
-			        SimulinkSubsystemHelper.arrangeSteckerType(matlab, inConnections, combinedPath, name);
-			        break;
-			    case KABEL:
-			        SimulinkSubsystemHelper.arrangeKabelType(matlab, inConnections, outConnections, combinedPath);
-			        break;
-			    // Add other cases if there are more types in SimulinkSubsystemType
-			    default:
-			        // Handle unexpected types if necessary
-			        break;
+			case STECKER:
+				SimulinkSubsystemHelper.arrangeStecker(matlab, inConnections, combinedPath, name);
+				break;
+			case KABEL:
+				SimulinkSubsystemHelper.arrangeKabel(matlab, inConnections, outConnections, combinedPath);
+				break;
+				// Add other cases if there are more types in SimulinkSubsystemType
+			case THERMAL_KABEL:
+				SimulinkSubsystemHelper.arrangeThermalKabel(matlab, inPorts, outPorts, combinedPath);
+				break;
+			default:
+				// Handle unexpected types if necessary
+				break;
 			}
 
 			// Generate the Simulink model for each relation in the relationList

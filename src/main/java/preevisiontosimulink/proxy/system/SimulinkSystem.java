@@ -62,18 +62,22 @@ public class SimulinkSystem implements ISimulinkSystem {
 		return null;
 	}
 
-	public void generateModel() {
+	public void generateModel(MatlabEngine matlab) {
 		try {
 			// Start the MATLAB engine
-			MatlabEngine matlab = MatlabEngine.startMatlab();
+			// matlab = MatlabEngine.startMatlab();
 			// Generate the Simulink model (example)
-			matlab.eval(name + " = new_system('" + name + "', 'Model')");
+			matlab.eval("new_system('" + name + "', 'Model')");
 
 			// Generate the Simulink model for each subsystem in the subsystemList
 			for (SimulinkSubsystem subsystem : subsystemList) {
-				if (subsystem.getContactPoints() != null && subsystem.getContactPoints().size() > 0) {
+				if (type == SimulinkSystemType.WIRING_HARNESS) {
+					if (subsystem.getContactPoints() != null && subsystem.getContactPoints().size() > 0) {
+						subsystem.generateModel(matlab);
+					}
+				} else {
 					subsystem.generateModel(matlab);
-				}
+				}			
 			}
 
 			// Generate the Simulink model for each block in the blockList
@@ -85,7 +89,7 @@ public class SimulinkSystem implements ISimulinkSystem {
 			for (ISimulinkRelation relation : relationList) {
 				relation.generateModel(matlab);
 			}
-			
+
 			if (this.type != null) {
 				if (this.type == SimulinkSystemType.WIRING_HARNESS) {
 					logInfo();
@@ -93,18 +97,18 @@ public class SimulinkSystem implements ISimulinkSystem {
 			}
 
 			matlab.eval("Simulink.BlockDiagram.arrangeSystem('" + name + "')");
-			
-			matlab.eval("set_param('" + name + "', 'StopTime', '300')");
-			
+
+			matlab.eval("set_param('" + name + "', 'StopTime', '400')");
+
 			String modelForderPath = "simulink/";
 			if (path != null) {
 				modelForderPath += path + "/";
-			} 
-			
-	        Path simulinkDir = Paths.get(modelForderPath);
-	        if (!Files.exists(simulinkDir)) {
-	            Files.createDirectory(simulinkDir);
-	        }
+			}
+
+			Path simulinkDir = Paths.get(modelForderPath);
+			if (!Files.exists(simulinkDir)) {
+				Files.createDirectory(simulinkDir);
+			}
 
 			// Save the model
 			String modelFilePath = modelForderPath + name + ".slx";
@@ -113,7 +117,7 @@ public class SimulinkSystem implements ISimulinkSystem {
 			System.out.println("Simulink model generated: " + name);
 
 			// Close the MATLAB engine
-			matlab.close();
+			// matlab.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

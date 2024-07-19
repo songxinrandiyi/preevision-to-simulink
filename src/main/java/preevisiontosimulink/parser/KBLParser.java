@@ -11,6 +11,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 
+import com.mathworks.engine.MatlabEngine;
+
 import preevisiontosimulink.library.InPort;
 import preevisiontosimulink.library.LConnection;
 import preevisiontosimulink.parser.kblelements.Cavity;
@@ -32,7 +34,6 @@ import preevisiontosimulink.proxy.system.SimulinkSubsystemType;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
 import preevisiontosimulink.proxy.system.SimulinkSystemType;
 import preevisiontosimulink.util.CalculatorUtils;
-import preevisiontosimulink.util.ExcelGenerator;
 import preevisiontosimulink.util.KBLModifier;
 import preevisiontosimulink.util.KBLUtils;
 import preevisiontosimulink.util.SimulinkSubsystemInitHelper;
@@ -41,6 +42,7 @@ import preevisiontosimulink.util.StringUtils;
 public class KBLParser {
 	private SimulinkSystem system;
 	private String modelName;
+	private MatlabEngine matlab;
 	private List<File> kblFiles = new ArrayList<>();
 	private List<File> xlsxFiles = new ArrayList<>();
 
@@ -69,37 +71,58 @@ public class KBLParser {
 	}
 
 	public void generateModel() {
-		system = new SimulinkSystem(modelName, SimulinkSystemType.WIRING_HARNESS, null);
-
-		getWiringHarness();
-
-		system.generateModel();
+		startMatlabEngine();
+		system = new SimulinkSystem(StringUtils.produceValidModelNameFromWire(modelName), 
+				SimulinkSystemType.WIRING_HARNESS, null);
+		for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
+			parsingConnectorOccurrences(connectorOccurrence);
+			SimulinkSubsystemInitHelper.generateConnectorOccurrences(connectorOccurrence, 
+					SimulinkSubsystemType.STECKER, system);
+		}
+		for (Connection connection : connections) {
+			parsingConnection(connection);
+		}
+		for (Connection connection : connections) {
+			if (connection.isValid()) {
+				SimulinkSubsystemInitHelper.generateConnection(connection, system, SimulinkSubsystemType.KABEL);
+			}
+		}
+		system.generateModel(matlab);
+		closeMatlabEngine();
 	}
 	
+	public void generateThermalModel(GeneralWire generalWire) {
+		system = new SimulinkSystem(StringUtils.produceValidModelNameFromWire(generalWire.getPartNumber()), 
+				SimulinkSystemType.THERMAL_SIMULATION, modelName);
+		SimulinkSubsystemInitHelper.generateThermalConnector(generalWire, system);
+		SimulinkSubsystemInitHelper.generateThermalCable(generalWire, system);
+		system.generateModel(matlab);
+	}
+	
+	public void startMatlabEngine() {
+		try {
+			matlab = MatlabEngine.startMatlab();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void closeMatlabEngine() {
+		try {
+			matlab.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void getGeneralWireInformation() {
-		system = new SimulinkSystem(modelName, null, null);
-
-		getWiringHarness();
-	}
-
-	public void generateExcel() {
-		system = new SimulinkSystem(modelName, SimulinkSystemType.WIRING_HARNESS, null);
-
-		getWiringHarness();
-
-		ExcelGenerator.generateExcel(modelName, system);
-	}
-
-	public void generateUpdatedExcel() {
-		ExcelGenerator.generateUpdatedExcel(modelName, system);
+		for (Connection connection : connections) {
+			parsingConnection(connection);
+		}
 	}
 
 	public void generateModifiedKBL() {
-		system = new SimulinkSystem(modelName, SimulinkSystemType.WIRING_HARNESS, null);
-
-		getWiringHarness();
-
-		KBLModifier.generateModifiedKBL(system, xlsxFiles, kblFiles);
+		KBLModifier.generateModifiedKBL(kblFiles, getValidGeneralWires());
 	}
 
 	private void init() {
@@ -130,230 +153,116 @@ public class KBLParser {
 		}
 	}
 
-	private void getWiringHarness() {
-		for (ConnectorOccurrence connectorOccurrence : connectorOccurrences) {
-			parsingConnectorOccurrences(connectorOccurrence);
-			generateConnectorOccurrences(connectorOccurrence, SimulinkSubsystemType.STECKER);
+	private void parsingConnectorOccurrences(ConnectorOccurrence connectorOccurrence) {
+		ConnectorHousing connectorHousing = null;
+		if (connectorOccurrence.getPart() != null) {
+			connectorHousing = KBLUtils.findConnectorHousing(connectorHousings, connectorOccurrence.getPart());
 		}
-		
-		for (Connection connection : connections) {
-			parsingConnection(connection);
+
+		if (connectorHousing != null) {
+			connectorOccurrence.setConnectorHousing(connectorHousing);
 		}
-		
-		for (Connection connection : connections) {
-			if (connection.getStartConnector() != null && connection.getEndConnector() != null
-					&& connection.getStartPin() != null && connection.getEndPin() != null) {
-				generateConnection(connection, SimulinkSubsystemType.KABEL);
+	}
+
+	private void parsingConnection(Connection connection) {
+		String name = connection.getSignalName();
+		Double resistance = 0.1;
+		Double length = null;
+		Double crossSectionArea = null;
+
+		Extremity startExtremity = null;
+		Extremity endExtremity = null;
+		GeneralWireOccurrence generalWireOccurrence = null;
+		GeneralWire generalWire = null;
+
+		Integer startPin = null;
+		Integer endPin = null;
+
+		if (connection.getExtremities() != null) {
+			for (Extremity extremity : connection.getExtremities()) {
+				if (extremity.getPositionOnWire() == 0.0) {
+					startExtremity = extremity;
+				} else {
+					endExtremity = extremity;
+				}
 			}
 		}
-	}
-	
-	private void parsingConnectorOccurrences(ConnectorOccurrence connectorOccurrence) {
-        ConnectorHousing connectorHousing = null;
-        if (connectorOccurrence.getPart() != null) {
-            connectorHousing = KBLUtils.findConnectorHousing(connectorHousings, connectorOccurrence.getPart());
-        }
-        
-        if (connectorHousing != null) {
-        	connectorOccurrence.setConnectorHousing(connectorHousing);
-        }
-	}
-	
-	private void generateConnectorOccurrences(ConnectorOccurrence connectorOccurrence, SimulinkSubsystemType type) {
-		ConnectorHousing connectorHousing = connectorOccurrence.getConnectorHousing();
-        if (system.getSubsystem(connectorOccurrence.getLargeId()) == null && connectorHousing != null) {
-        	SimulinkSubsystem subsystem = system.addSubsystem(new SimulinkSubsystem(system, connectorOccurrence.getLargeId(), type));
-            List<Cavity> cavities = connectorOccurrence.getSlots().getCavities();
-            for (Cavity cavity : cavities) {
-                Integer cavityNumber = KBLUtils.getCavityNumberById(connectorHousing, cavity.getPart());
-                
-                if (type == SimulinkSubsystemType.STECKER) {
-                	subsystem.addInConnection(new LConnection(subsystem, cavityNumber.toString()));
-                } else if (type == SimulinkSubsystemType.THERMAL_STECKER) {
-                	subsystem.addInPort(new InPort(subsystem, cavityNumber.toString()));
-                }                
-                subsystem.addNumOfPins();
-            }
-    		SimulinkSubsystemInitHelper.initStecker(subsystem);
-        }
-	}
-	
-	private void parsingConnection(Connection connection) {
-        String name = connection.getSignalName();
-        Double resistance = 0.1;
-        Double length = null;
-        Double crossSectionArea = null;
+		if (startExtremity != null && endExtremity != null) {
+			if (connection.getWire() != null) {
+				generalWireOccurrence = KBLUtils.findGeneralWireOccurrence(generalWireOccurrences,
+						connection.getWire());
+			}
+			if (generalWireOccurrence != null) {
+				connection.setGeneralWireOccurrence(generalWireOccurrence);
+				generalWire = KBLUtils.findGeneralWire(generalWires, generalWireOccurrence.getPart());
+			}
+			if (generalWire != null) {
+				generalWire.addConnection(connection);
+			}
+			if (generalWireOccurrence != null && generalWireOccurrence.getLengthInformation() != null) {
+				length = generalWireOccurrence.getLengthInformation().get(0).getLengthValue().getValueComponent();
+				if (generalWire != null && length != null) {
+					crossSectionArea = generalWire.getCrossSectionArea().getValueComponent();
+					if (crossSectionArea != null) {
+						resistance = CalculatorUtils.calculateResistance(length, crossSectionArea);
+					}
+				}
+			}
+			if (crossSectionArea != null) {
+				name += "_" + crossSectionArea;
+				connection.setCrossSectionArea(crossSectionArea);
+			}
+			if (length != null) {
+				int lengthInt = (int) Math.round(length);
+				name += "_" + lengthInt;
+				connection.setLength(length);
+			}
+			connection.setName(name);
+			connection.setResistance(resistance);
 
-        Extremity startExtremity = null;
-        Extremity endExtremity = null;
-        GeneralWireOccurrence generalWireOccurrence = null;
-        GeneralWire generalWire = null;
+			if (startExtremity.getContactPoint() != null && endExtremity.getContactPoint() != null) {
+				ConnectorOccurrence startConnectorOccurrence = KBLUtils.findConnectorOccurrenceWithContactPoint(
+						connectorOccurrences, startExtremity.getContactPoint());
+				if (startConnectorOccurrence != null) {
+					connection.setStartConnector(startConnectorOccurrence);
+					ConnectorHousing startConnectorHousing = KBLUtils.findConnectorHousing(connectorHousings,
+							startConnectorOccurrence.getPart());
 
-        Integer startPin = null;
-        Integer endPin = null;
+					if (startConnectorHousing != null) {
+						startConnectorOccurrence.setConnectorHousing(startConnectorHousing);
+						startPin = KBLUtils.findPinNumWithContactPointId(startConnectorOccurrence,
+								startConnectorHousing, startExtremity.getContactPoint());
 
-        if (connection.getExtremities() != null) {
-            for (Extremity extremity : connection.getExtremities()) {
-                if (extremity.getPositionOnWire() == 0.0) {
-                    startExtremity = extremity;
-                } else {
-                    endExtremity = extremity;
-                }
-            }
-        }
+						if (startPin != null) {
+							connection.setStartPin(startPin);
+						}
+					}
+				}
+				ConnectorOccurrence endConnectorOccurrence = KBLUtils
+						.findConnectorOccurrenceWithContactPoint(connectorOccurrences, endExtremity.getContactPoint());
+				if (endConnectorOccurrence != null) {
+					connection.setEndConnector(endConnectorOccurrence);
+					ConnectorHousing endConnectorHousing = KBLUtils.findConnectorHousing(connectorHousings,
+							endConnectorOccurrence.getPart());
+					if (endConnectorHousing != null) {
+						endConnectorOccurrence.setConnectorHousing(endConnectorHousing);
+						endPin = KBLUtils.findPinNumWithContactPointId(endConnectorOccurrence, endConnectorHousing,
+								endExtremity.getContactPoint());
 
-        if (startExtremity != null && endExtremity != null) {
-            if (connection.getWire() != null) {
-                generalWireOccurrence = KBLUtils.findGeneralWireOccurrence(generalWireOccurrences, connection.getWire());
-            }
-            
-            if (generalWireOccurrence != null) {
-            	connection.setGeneralWireOccurrence(generalWireOccurrence);
-                generalWire = KBLUtils.findGeneralWire(generalWires, generalWireOccurrence.getPart());
-            }
-            
-            if (generalWire != null) {
-            	generalWire.addConnection(connection);
-            }
-
-            if (generalWireOccurrence != null && generalWireOccurrence.getLengthInformation() != null) {
-                length = generalWireOccurrence.getLengthInformation().get(0).getLengthValue().getValueComponent();
-                if (generalWire != null && length != null) {
-                    crossSectionArea = generalWire.getCrossSectionArea().getValueComponent();
-                    if (crossSectionArea != null) {
-                        resistance = CalculatorUtils.calculateResistance(length, crossSectionArea);                     
-                    }
-                }
-            }
-            
-            if (crossSectionArea != null) {
-            	name += "_" + crossSectionArea;
-            	connection.setCrossSectionArea(crossSectionArea);
-            }
-            if (length != null) {
-                int lengthInt = (int) Math.round(length);  
-                name += "_" + lengthInt;
-                connection.setLength(length);
-            }
-            
-            connection.setName(name);
-            connection.setResistance(resistance);         
-
-            if (startExtremity.getContactPoint() != null && endExtremity.getContactPoint() != null) {
-            	ConnectorOccurrence startConnectorOccurrence = KBLUtils.findConnectorOccurrenceWithContactPoint(connectorOccurrences, startExtremity.getContactPoint());
-                if (startConnectorOccurrence != null) {
-                	connection.setStartConnector(startConnectorOccurrence);
-                    ConnectorHousing startConnectorHousing = KBLUtils.findConnectorHousing(connectorHousings, startConnectorOccurrence.getPart());
-                    
-                    if (startConnectorHousing != null) {
-                    	startConnectorOccurrence.setConnectorHousing(startConnectorHousing);
-                        startPin = KBLUtils.findPinNumWithContactPointId(startConnectorOccurrence, startConnectorHousing, startExtremity.getContactPoint());
-
-                        if (startPin != null) {
-                        	connection.setStartPin(startPin);     
-                        }
-                    }
-                }
-
-                ConnectorOccurrence endConnectorOccurrence = KBLUtils.findConnectorOccurrenceWithContactPoint(connectorOccurrences, endExtremity.getContactPoint());
-                if (endConnectorOccurrence != null) {
-                	connection.setEndConnector(endConnectorOccurrence);
-                    ConnectorHousing endConnectorHousing = KBLUtils.findConnectorHousing(connectorHousings, endConnectorOccurrence.getPart());
-                    if (endConnectorHousing != null) {
-                    	endConnectorOccurrence.setConnectorHousing(endConnectorHousing);
-                        endPin = KBLUtils.findPinNumWithContactPointId(endConnectorOccurrence, endConnectorHousing, endExtremity.getContactPoint());
-
-                        if (endPin != null) {
-                        	connection.setEndPin(endPin);                               
-                        }
-                    }
-                }
-                if (length != null) {
-                	connection.setLength(length);
-                }
-                if (crossSectionArea != null) {
-                	connection.setCrossSectionArea(crossSectionArea);
-                }
-            }
-        }
-	}
-	
-	private void generateConnection(Connection connection, SimulinkSubsystemType type) {
-        	String name = connection.getName();
-            if (system.getSubsystem(name) != null) {
-                name = StringUtils.generateUniqueName(system, name);
-            }
-            system.addSubsystem(new SimulinkSubsystem(system, name, type));
-            SimulinkSubsystem subsystem = system.getSubsystem(name);
-            
-            switch (type) {
-            case KABEL:
-            	SimulinkSubsystemInitHelper.initKabel(subsystem, connection.getResistance());
-                break;
-            case THERMAL_KABEL:
-                
-                break;
-            // Add other cases if there are more types in SimulinkSubsystemType
-            default:
-                // Handle unexpected types if necessary
-                break;
-            }
-            
-            Integer startPin = connection.getStartPin();
-            String startConnectorName = connection.getStartConnector().getLargeId();
-            SimulinkSubsystem startStecker = system.getSubsystem(startConnectorName);     
-            Integer endPin = connection.getEndPin();
-            String endConnectorName = connection.getEndConnector().getLargeId();
-            SimulinkSubsystem endStecker = system.getSubsystem(endConnectorName);
-            
-            String pathStart = startConnectorName + "_" + startStecker.getConnectionPath(startPin.toString()) + "_" + name + "_LConn1";
-            if (system.getRelation(pathStart) == null) {
-                system.addRelation(new SimulinkSubToSubRelation(startConnectorName, startStecker.getConnectionPath(startPin.toString()), name, "LConn1", system, 0));
-                Contact leftContactPoint = new Contact(startConnectorName, startPin, 1);
-                subsystem.addContact(leftContactPoint);
-				Contact startSteckerContactPoint = new Contact(endStecker.getName(), endPin, startPin);
-				startStecker.addContact(startSteckerContactPoint);
-            }
-            
-            String pathEnd = endConnectorName + "_" + endStecker.getConnectionPath(endPin.toString()) + "_" + name + "_RConn1";
-            if (system.getRelation(pathEnd) == null) {
-                system.addRelation(new SimulinkSubToSubRelation(endConnectorName, endStecker.getConnectionPath(endPin.toString()), name, "RConn1", system, 0));
-                Contact rightContactPoint = new Contact(endConnectorName, endPin, 2);
-                subsystem.addContact(rightContactPoint);
-				Contact endSteckerContactPoint = new Contact(startStecker.getName(), startPin, endPin);
-				endStecker.addContact(endSteckerContactPoint);
-            }
-            
-            GeneralWireOccurrence generalWireOccurrence = connection.getGeneralWireOccurrence();
-            if (generalWireOccurrence != null && generalWireOccurrence.getWireNumber() != null) {
-                if (generalWireOccurrence.getWireNumber() != null) {
-                    subsystem.getKabelInformation().setWireNumber(generalWireOccurrence.getWireNumber());
-                }
-                if (generalWireOccurrence.getId() != null) {
-                    subsystem.getKabelInformation().setGeneralWireOccurrenceId(generalWireOccurrence.getId());
-                }
-                if (generalWireOccurrence.getPart() != null) {
-                    subsystem.getKabelInformation().setGeneralWireId(generalWireOccurrence.getPart());
-                }
-            }
-            if (connection.getLength() != null) {
-                subsystem.getKabelInformation().setLength(connection.getLength());
-            }
-            if (connection.getCrossSectionArea() != null) {
-                subsystem.getKabelInformation().setCrossSectionArea(connection.getCrossSectionArea());
-            }
-            if (connection.getSignalName() != null) {
-                subsystem.getKabelInformation().setSignalName(connection.getSignalName());
-            }
+						if (endPin != null) {
+							connection.setEndPin(endPin);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	public List<GeneralWire> getGeneralWires() {
 		return generalWires;
 	}
-	
+
 	public List<GeneralWire> getValidGeneralWires() {
-        return generalWires.stream()
-                .filter(GeneralWire::isValid)
-                .collect(Collectors.toList());                                                 
+		return generalWires.stream().filter(GeneralWire::isValid).collect(Collectors.toList());
 	}
 }

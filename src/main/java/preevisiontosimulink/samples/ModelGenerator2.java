@@ -2,6 +2,8 @@ package preevisiontosimulink.samples;
 
 import java.util.List;
 
+import com.mathworks.engine.MatlabEngine;
+
 import preevisiontosimulink.library.Add;
 import preevisiontosimulink.library.Gain;
 import preevisiontosimulink.library.InPort;
@@ -77,7 +79,13 @@ public class ModelGenerator2 {
 		system.addRelation(new SimulinkRelation(lastSubsystem.getBlock("Add1").getOutPort(0),
 				lastSubsystem.getOutPort("Outport1").getInPort(0), lastSubsystem));
 
-		system.generateModel();
+		try {
+			MatlabEngine matlab = MatlabEngine.startMatlab();
+			system.generateModel(matlab);
+			matlab.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static ISimulinkBlock getLastBlock(List<ISimulinkBlock> blockList) {

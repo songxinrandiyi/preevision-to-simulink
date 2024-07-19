@@ -1,5 +1,7 @@
 package preevisiontosimulink.samples;
 
+import com.mathworks.engine.MatlabEngine;
+
 import preevisiontosimulink.library.DCVoltageSource;
 import preevisiontosimulink.library.ElectricalReference;
 import preevisiontosimulink.library.Resistor;
@@ -37,6 +39,12 @@ public class ModelGenerator {
 		system.addRelation(new SimulinkRelation(system.getBlock("Solver1").getInPort(0),
 				system.getBlock("Ref1").getInPort(0), system));
 
-		system.generateModel();
+		try {
+			MatlabEngine matlab = MatlabEngine.startMatlab();
+			system.generateModel(matlab);
+			matlab.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

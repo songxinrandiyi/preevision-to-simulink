@@ -11,8 +11,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "Connector_occurrence")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ConnectorOccurrence {
-    private ConnectorHousing connectorHousing = null;  
-    
+	private ConnectorHousing connectorHousing = null;
+
 	public ConnectorHousing getConnectorHousing() {
 		return connectorHousing;
 	}
