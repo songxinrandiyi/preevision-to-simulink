@@ -1,10 +1,10 @@
-package preevisiontosimulink.proxy.relation;
+package preevisiontosimulink.proxy.connection;
 
 import com.mathworks.engine.MatlabEngine;
 
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
-public class SimulinkSubToSubRelation implements ISimulinkRelation {
+public class SimulinkSubToSubConnection implements ISimulinkConnection {
 	private ISimulinkSystem parent;
 	private String name;
 	private String firstSubsystemName;
@@ -12,7 +12,7 @@ public class SimulinkSubToSubRelation implements ISimulinkRelation {
 	private String secondSubsystemName;
 	private String secondPortName;
 
-	public SimulinkSubToSubRelation(String firstSubsystemName, String firstPortName, String secondSubsystemName,
+	public SimulinkSubToSubConnection(String firstSubsystemName, String firstPortName, String secondSubsystemName,
 			String secondPortName, ISimulinkSystem parent) {
 		this.firstSubsystemName = firstSubsystemName;
 		this.firstPortName = firstPortName;

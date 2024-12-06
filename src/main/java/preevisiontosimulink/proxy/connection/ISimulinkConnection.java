@@ -1,10 +1,10 @@
-package preevisiontosimulink.proxy.relation;
+package preevisiontosimulink.proxy.connection;
 
 import com.mathworks.engine.MatlabEngine;
 
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
-public interface ISimulinkRelation {
+public interface ISimulinkConnection {
 	ISimulinkSystem getParent();
 
 	void generateModel(MatlabEngine matlab);

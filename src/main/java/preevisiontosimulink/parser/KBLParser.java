@@ -27,8 +27,8 @@ import preevisiontosimulink.parser.kblelements.KBLContainer;
 import preevisiontosimulink.parser.kblelements.Node;
 import preevisiontosimulink.parser.kblelements.Segment;
 import preevisiontosimulink.parser.kblelements.Unit;
+import preevisiontosimulink.proxy.connection.SimulinkSubToSubConnection;
 import preevisiontosimulink.proxy.port.Contact;
-import preevisiontosimulink.proxy.relation.SimulinkSubToSubRelation;
 import preevisiontosimulink.proxy.system.SimulinkSubsystem;
 import preevisiontosimulink.proxy.system.SimulinkSubsystemType;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
@@ -131,8 +131,8 @@ public class KBLParser {
 			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
 			for (File kblFile : kblFiles) {
-				JAXBElement<KBLContainer> rootElement = jaxbUnmarshaller.unmarshal(new StreamSource(kblFile),
-						KBLContainer.class);
+				JAXBElement<KBLContainer> rootElement = jaxbUnmarshaller.
+						unmarshal(new StreamSource(kblFile), KBLContainer.class);
 				kblContainer = rootElement.getValue();
 
 				connectorHousings.addAll(kblContainer.getConnectorHousings());

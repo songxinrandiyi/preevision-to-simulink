@@ -2,7 +2,7 @@ package preevisiontosimulink.library;
 
 import preevisiontosimulink.proxy.block.SimulinkBlock;
 import preevisiontosimulink.proxy.block.SimulinkParameter;
-import preevisiontosimulink.proxy.port.LConnectionPort;
+import preevisiontosimulink.proxy.port.LConn;
 import preevisiontosimulink.proxy.port.SimulinkPort;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
@@ -23,7 +23,7 @@ public class PSSimulinkConverter extends SimulinkBlock {
 		}
 		num++;
 		// Initialize inputs and outputs if necessary
-		this.inPorts.add(new LConnectionPort(1, this));
+		this.inPorts.add(new LConn(1, this));
 		this.outPorts.add(new SimulinkPort(1, this));
 
 		// Initialize parameters specific to the block

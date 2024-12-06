@@ -2,8 +2,8 @@ package preevisiontosimulink.library;
 
 import preevisiontosimulink.proxy.block.SimulinkBlock;
 import preevisiontosimulink.proxy.block.SimulinkParameter;
-import preevisiontosimulink.proxy.port.LConnectionPort;
-import preevisiontosimulink.proxy.port.RConnectionPort;
+import preevisiontosimulink.proxy.port.LConn;
+import preevisiontosimulink.proxy.port.RConn;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
 public class DCVoltageSource extends SimulinkBlock {
@@ -13,6 +13,7 @@ public class DCVoltageSource extends SimulinkBlock {
 		super(parent, name);
 	}
 
+	//class DCVoltageSource extends SimulinkBlock
 	@Override
 	public void initialize() {
 		this.BLOCK_NAME = "DCVoltageSource";
@@ -22,11 +23,8 @@ public class DCVoltageSource extends SimulinkBlock {
 		}
 		num++;
 
-		// Initialize inputs and outputs if necessary
-		this.inPorts.add(new LConnectionPort(1, this));
-		this.outPorts.add(new RConnectionPort(1, this));
-
-		// Initialize parameters specific to the Sine Wave block
+		this.inPorts.add(new LConn(1, this));
+		this.outPorts.add(new RConn(1, this));
 		this.parameters.add(new SimulinkParameter<Double>("v0", this));
 	}
 }

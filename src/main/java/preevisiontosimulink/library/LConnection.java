@@ -2,7 +2,7 @@ package preevisiontosimulink.library;
 
 import preevisiontosimulink.proxy.block.SimulinkBlock;
 import preevisiontosimulink.proxy.block.SimulinkParameter;
-import preevisiontosimulink.proxy.port.RConnectionPort;
+import preevisiontosimulink.proxy.port.RConn;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
 public class LConnection extends SimulinkBlock {
@@ -21,7 +21,7 @@ public class LConnection extends SimulinkBlock {
 		}
 		num++;
 		// Initialize inputs and outputs if necessary
-		this.inPorts.add(new RConnectionPort(1, this));
+		this.inPorts.add(new RConn(1, this));
 
 		// Initialize parameters specific to the Sine Wave block
 		this.parameters.add(new SimulinkParameter<String>("Side", this));

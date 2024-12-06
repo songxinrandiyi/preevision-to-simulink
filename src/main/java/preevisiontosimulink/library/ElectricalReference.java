@@ -1,7 +1,7 @@
 package preevisiontosimulink.library;
 
 import preevisiontosimulink.proxy.block.SimulinkBlock;
-import preevisiontosimulink.proxy.port.LConnectionPort;
+import preevisiontosimulink.proxy.port.LConn;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
 public class ElectricalReference extends SimulinkBlock {
@@ -20,7 +20,7 @@ public class ElectricalReference extends SimulinkBlock {
 		}
 		num++;
 		// Initialize inputs and outputs if necessary
-		this.inPorts.add(new LConnectionPort(1, this));
+		this.inPorts.add(new LConn(1, this));
 
 		// Initialize parameters specific to the Sine Wave block
 	}

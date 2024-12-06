@@ -2,8 +2,8 @@ package preevisiontosimulink.library;
 
 import preevisiontosimulink.proxy.block.SimulinkBlock;
 import preevisiontosimulink.proxy.block.SimulinkParameter;
-import preevisiontosimulink.proxy.port.LConnectionPort;
-import preevisiontosimulink.proxy.port.RConnectionPort;
+import preevisiontosimulink.proxy.port.LConn;
+import preevisiontosimulink.proxy.port.RConn;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
 public class Resistor extends SimulinkBlock {
@@ -23,8 +23,8 @@ public class Resistor extends SimulinkBlock {
 		}
 		num++;
 		// Initialize inputs and outputs if necessary
-		this.inPorts.add(new LConnectionPort(1, this));
-		this.outPorts.add(new RConnectionPort(1, this));
+		this.inPorts.add(new LConn(1, this));
+		this.outPorts.add(new RConn(1, this));
 
 		// Initialize parameters specific to the Sine Wave block
 		this.parameters.add(new SimulinkParameter<Double>("R", this));

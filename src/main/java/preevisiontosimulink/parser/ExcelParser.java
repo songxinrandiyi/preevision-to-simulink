@@ -18,8 +18,8 @@ import com.mathworks.engine.MatlabEngine;
 import preevisiontosimulink.library.LConnection;
 import preevisiontosimulink.library.Resistor;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
-import preevisiontosimulink.proxy.relation.SimulinkExternRelation;
-import preevisiontosimulink.proxy.relation.SimulinkRelation;
+import preevisiontosimulink.proxy.connection.SimulinkExternConnecntion;
+import preevisiontosimulink.proxy.connection.SimulinkConnection;
 import preevisiontosimulink.proxy.system.SimulinkSubsystem;
 import preevisiontosimulink.proxy.system.SimulinkSubsystemType;
 import preevisiontosimulink.proxy.system.SimulinkSystem;
@@ -144,10 +144,10 @@ public class ExcelParser {
 				double resistance = calculateResistance(row.getCell(21), row.getCell(20));
 				system.getBlock(name).setParameter("R", resistance);
 				String pin1Path = system.getSubsystem(component1Name).getConnectionPath(pin1Name);
-				system.addRelation(new SimulinkExternRelation(system.getBlock(name).getInPort(0), component1Name,
+				system.addConnection(new SimulinkExternConnecntion(system.getBlock(name).getInPort(0), component1Name,
 						pin1Path, system, 0));
 				String pin2Path = system.getSubsystem(component2Name).getConnectionPath(pin2Name);
-				system.addRelation(new SimulinkExternRelation(system.getBlock(name).getOutPort(0), component2Name,
+				system.addConnection(new SimulinkExternConnecntion(system.getBlock(name).getOutPort(0), component2Name,
 						pin2Path, system, 0));
 
 			}
@@ -162,7 +162,7 @@ public class ExcelParser {
 				for (LConnection inPort : inPorts) {
 					subsystem.addBlock(new Resistor(subsystem, inPort.getName() + "_R"));
 					subsystem.getBlock(inPort.getName() + "_R").setParameter("R", 3);
-					subsystem.addRelation(new SimulinkRelation(inPort.getInPort(0),
+					subsystem.addConnection(new SimulinkConnection(inPort.getInPort(0),
 							subsystem.getBlock(inPort.getName() + "_R").getInPort(0), subsystem));
 				}
 				if (inPorts.size() > 1) {
@@ -171,7 +171,7 @@ public class ExcelParser {
 						LConnection startPort = inPorts.get(i);
 						ISimulinkBlock endResistor = subsystem.getBlock(endPort.getName() + "_R");
 						ISimulinkBlock startResistor = subsystem.getBlock(startPort.getName() + "_R");
-						subsystem.addRelation(new SimulinkRelation(endResistor.getOutPort(0),
+						subsystem.addConnection(new SimulinkConnection(endResistor.getOutPort(0),
 								startResistor.getOutPort(0), subsystem));
 					}
 				}

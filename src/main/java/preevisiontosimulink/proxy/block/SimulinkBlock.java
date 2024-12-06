@@ -62,7 +62,7 @@ public class SimulinkBlock implements ISimulinkBlock {
 	public String getName() {
 		return name;
 	}
-
+	
 	@Override
 	public void generateModel(MatlabEngine matlab) {
 		try {
@@ -72,7 +72,8 @@ public class SimulinkBlock implements ISimulinkBlock {
 			System.out.println("Simulink block generated: " + combinedPath);
 			for (SimulinkParameter<?> param : getParameters()) {
 				if (param.getValue() != null) {
-					matlab.eval("set_param('" + combinedPath + "', '" + param.getName() + "', '"
+					matlab.eval("set_param('" + combinedPath + "', '" 
+							+ param.getName() + "', '"
 							+ param.getValue().toString() + "')");
 
 					System.out.println("set_param('" + combinedPath + "', '" + param.getName() + "', '"

@@ -1,17 +1,17 @@
-package preevisiontosimulink.proxy.relation;
+package preevisiontosimulink.proxy.connection;
 
 import com.mathworks.engine.MatlabEngine;
 
 import preevisiontosimulink.proxy.port.ISimulinkPort;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
-public class SimulinkRelation implements ISimulinkRelation {
+public class SimulinkConnection implements ISimulinkConnection {
 	private String name;
 	private ISimulinkPort inPort;
 	private ISimulinkPort outPort;
 	private ISimulinkSystem parent;
 
-	public SimulinkRelation(ISimulinkPort outPort, ISimulinkPort inPort, ISimulinkSystem parent) {
+	public SimulinkConnection(ISimulinkPort outPort, ISimulinkPort inPort, ISimulinkSystem parent) {
 		this.name = outPort.getParent().getName() + "_" + inPort.getParent().getName();
 		this.inPort = inPort;
 		this.outPort = outPort;
@@ -26,8 +26,10 @@ public class SimulinkRelation implements ISimulinkRelation {
 	@Override
 	public void generateModel(MatlabEngine matlab) {
 		// Implementation for generating the Simulink relation
-		String sourceBlockPath = outPort.getParent().getName() + "/" + outPort.getName();
-		String destinationBlockPath = inPort.getParent().getName() + "/" + inPort.getName();
+		String sourceBlockPath = outPort.getParent().getName() + "/" 
+				+ outPort.getName();
+		String destinationBlockPath = inPort.getParent().getName() + "/" 
+				+ inPort.getName();
 
 		String parentPath = parent.getName();
 		ISimulinkSystem currentParent = parent.getParent();
@@ -37,8 +39,8 @@ public class SimulinkRelation implements ISimulinkRelation {
 		}
 
 		try {
-			matlab.eval("add_line('" + parentPath + "', '" + sourceBlockPath + "', '" + destinationBlockPath
-					+ "', 'autorouting', 'on')");
+			matlab.eval("add_line('" + parentPath + "', '" + sourceBlockPath + "', '"
+					+ destinationBlockPath + "', 'autorouting', 'on')");
 
 			System.out.println("Simulink relation generated: " + sourceBlockPath + " -> " + destinationBlockPath);
 		} catch (Exception e) {

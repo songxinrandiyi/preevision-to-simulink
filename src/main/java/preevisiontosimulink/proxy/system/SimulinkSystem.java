@@ -16,8 +16,8 @@ import preevisiontosimulink.library.DCCurrentSource;
 import preevisiontosimulink.library.Resistor;
 import preevisiontosimulink.library.VoltageSensor;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
+import preevisiontosimulink.proxy.connection.ISimulinkConnection;
 import preevisiontosimulink.proxy.port.Contact;
-import preevisiontosimulink.proxy.relation.ISimulinkRelation;
 import preevisiontosimulink.util.StringUtils;
 
 public class SimulinkSystem implements ISimulinkSystem {
@@ -26,7 +26,7 @@ public class SimulinkSystem implements ISimulinkSystem {
 	private SimulinkSystemType type;
 	private String path = null;
 	private List<ISimulinkBlock> blockList = new ArrayList<>();
-	private List<ISimulinkRelation> relationList = new ArrayList<>();
+	private List<ISimulinkConnection> relationList = new ArrayList<>();
 	private List<SimulinkSubsystem> subsystemList = new ArrayList<>();
 
 	public SimulinkSystem(String name, SimulinkSystemType type, String path) {
@@ -47,7 +47,7 @@ public class SimulinkSystem implements ISimulinkSystem {
 	}
 
 	@Override
-	public ISimulinkRelation addRelation(ISimulinkRelation relation) {
+	public ISimulinkConnection addConnection(ISimulinkConnection relation) {
 		relationList.add(relation);
 		return relation;
 	}
@@ -86,7 +86,7 @@ public class SimulinkSystem implements ISimulinkSystem {
 			}
 
 			// Generate the Simulink model for each relation in the relationList
-			for (ISimulinkRelation relation : relationList) {
+			for (ISimulinkConnection relation : relationList) {
 				relation.generateModel(matlab);
 			}
 
@@ -168,7 +168,7 @@ public class SimulinkSystem implements ISimulinkSystem {
 	}
 
 	@Override
-	public List<ISimulinkRelation> getRelationList() {
+	public List<ISimulinkConnection> getConnectionList() {
 		return relationList;
 	}
 
@@ -199,8 +199,8 @@ public class SimulinkSystem implements ISimulinkSystem {
 	}
 
 	@Override
-	public ISimulinkRelation getRelation(String name) {
-		for (ISimulinkRelation relation : relationList) {
+	public ISimulinkConnection getConnection(String name) {
+		for (ISimulinkConnection relation : relationList) {
 			if (relation.getName().equals(name)) {
 				return relation;
 			}

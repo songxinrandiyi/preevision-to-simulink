@@ -1,11 +1,11 @@
-package preevisiontosimulink.proxy.relation;
+package preevisiontosimulink.proxy.connection;
 
 import com.mathworks.engine.MatlabEngine;
 
 import preevisiontosimulink.proxy.port.ISimulinkPort;
 import preevisiontosimulink.proxy.system.ISimulinkSystem;
 
-public class SimulinkExternRelation implements ISimulinkRelation {
+public class SimulinkExternConnecntion implements ISimulinkConnection {
 	private ISimulinkPort outPort;
 	private ISimulinkSystem parent;
 	private String name;
@@ -13,7 +13,7 @@ public class SimulinkExternRelation implements ISimulinkRelation {
 	private String portName;
 	private int direction;
 
-	public SimulinkExternRelation(ISimulinkPort outPort, String subsystemName, String portName, ISimulinkSystem parent,
+	public SimulinkExternConnecntion(ISimulinkPort outPort, String subsystemName, String portName, ISimulinkSystem parent,
 			int direction) {
 		this.subsystemName = subsystemName;
 		this.portName = portName;

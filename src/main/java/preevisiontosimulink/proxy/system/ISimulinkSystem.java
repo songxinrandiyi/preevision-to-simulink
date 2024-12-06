@@ -6,7 +6,7 @@ import preevisiontosimulink.library.DCCurrentSource;
 import preevisiontosimulink.library.Resistor;
 import preevisiontosimulink.library.VoltageSensor;
 import preevisiontosimulink.proxy.block.ISimulinkBlock;
-import preevisiontosimulink.proxy.relation.ISimulinkRelation;
+import preevisiontosimulink.proxy.connection.ISimulinkConnection;
 
 public interface ISimulinkSystem {
 	ISimulinkSystem getParent();
@@ -17,11 +17,11 @@ public interface ISimulinkSystem {
 
 	ISimulinkBlock getBlock(String name);
 
-	ISimulinkRelation addRelation(ISimulinkRelation relation);
+	ISimulinkConnection addConnection(ISimulinkConnection connection);
 
 	List<ISimulinkBlock> getBlockList();
 
-	List<ISimulinkRelation> getRelationList();
+	List<ISimulinkConnection> getConnectionList();
 
 	List<SimulinkSubsystem> getSubsystemList(SimulinkSubsystemType type);
 
@@ -29,7 +29,7 @@ public interface ISimulinkSystem {
 
 	String getName();
 
-	ISimulinkRelation getRelation(String name);
+	ISimulinkConnection getConnection(String name);
 
 	List<Resistor> getAllResistorBlocks();
 
