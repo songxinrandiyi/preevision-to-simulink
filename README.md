@@ -1,4 +1,4 @@
-# preevisiontosimulink
+# preevision-to-simulink
 
 ## Overview
 `preevision-to-simulink` is a tool that automatically generates Simulink models based on XML files extracted from PREEvision.
